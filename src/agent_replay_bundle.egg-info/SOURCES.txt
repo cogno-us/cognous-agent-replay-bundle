@@ -1,4 +1,5 @@
 LICENSE
+NOTICE
 README.md
 pyproject.toml
 src/agent_replay_bundle/__init__.py
