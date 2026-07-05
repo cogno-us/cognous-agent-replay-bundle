@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/signature_metadata.schema.json",
+  "title": "SignatureMetadata",
+  "description": "Metadata describing an export integrity signature applied to the bundle.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "signed": {
+      "type": "boolean",
+      "description": "Whether this bundle has been signed.",
+      "default": false
+    },
+    "signed_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp when the signature was applied."
+    },
+    "signature_algorithm": {
+      "type": ["string", "null"],
+      "description": "The algorithm used to produce the signature (e.g. HMAC-SHA256)."
+    },
+    "signature": {
+      "type": ["string", "null"],
+      "description": "The hex-encoded signature value."
+    },
+    "key_id": {
+      "type": ["string", "null"],
+      "description": "Optional identifier for the signing key used."
+    }
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "bundle_id": "bundle-ir-001",
+  "bundle_version": "0.1",
+  "run_id": "run-ir-001",
+  "status": "complete",
+  "generated_at": "2026-07-02T14:30:00Z",
+  "producer": "research-assistant-v1",
+  "frame": {
+    "frame_id": "frame-ir-001",
+    "task": "Search internal research documents on Q3 market trends, read the top three files, and generate a summary report.",
+    "actor": "research-assistant",
+    "environment": "internal",
+    "allowed_tools": ["doc_search", "file_read", "summary_generate", "doc_export"],
+    "blocked_tools": ["external_api_call", "email_send", "database_write"],
+    "policy_version": "research-policy-v2.0",
+    "created_at": "2026-07-02T14:29:50Z"
+  },
+  "action_proposals": [
+    {
+      "action_id": "action-ir-001",
+      "run_id": "run-ir-001",
+      "tool_name": "doc_search",
+      "action_type": "read",
+      "target": "docs://internal/research?query=Q3+market+trends",
+      "payload": {
+        "query": "Q3 market trends",
+        "max_results": 10
+      },
+      "proposed_at": "2026-07-02T14:30:01Z",
+      "reason": "Find relevant research documents on Q3 market trends."
+    },
+    {
+      "action_id": "action-ir-002",
+      "run_id": "run-ir-001",
+      "tool_name": "file_read",
+      "action_type": "read",
+      "target": "docs://internal/research/q3-market-analysis-2026.md",
+      "payload": {},
+      "proposed_at": "2026-07-02T14:30:05Z",
+      "reason": "Read the top-ranked document from the search results."
+    },
+    {
+      "action_id": "action-ir-003",
+      "run_id": "run-ir-001",
+      "tool_name": "doc_export",
+      "action_type": "export",
+      "target": "exports://research/q3-summary-2026.pdf",
+      "payload": {
+        "format": "pdf",
+        "include_sources": true
+      },
+      "proposed_at": "2026-07-02T14:30:15Z",
+      "reason": "Export the generated summary report for stakeholder distribution."
+    }
+  ],
+  "policy_decisions": [
+    {
+      "decision_id": "decision-ir-001",
+      "action_id": "action-ir-001",
+      "run_id": "run-ir-001",
+      "result": "allow",
+      "policy_name": "internal-doc-read-policy",
+      "reason": "research-assistant has read authority over internal research documents.",
+      "decided_at": "2026-07-02T14:30:02Z",
+      "deterministic_fingerprint": "fp-doc-search-c1d2e3f4",
+      "trace_id": "trace-ir-001"
+    },
+    {
+      "decision_id": "decision-ir-002",
+      "action_id": "action-ir-002",
+      "run_id": "run-ir-001",
+      "result": "allow",
+      "policy_name": "internal-doc-read-policy",
+      "reason": "File read of internal research document permitted under research read authority.",
+      "decided_at": "2026-07-02T14:30:06Z",
+      "deterministic_fingerprint": "fp-file-read-g5h6i7j8",
+      "trace_id": "trace-ir-002"
+    },
+    {
+      "decision_id": "decision-ir-003",
+      "action_id": "action-ir-003",
+      "run_id": "run-ir-001",
+      "result": "escalate",
+      "policy_name": "export-policy",
+      "reason": "Export action requires explicit export authority. Escalating to supervisor for approval.",
+      "decided_at": "2026-07-02T14:30:16Z",
+      "deterministic_fingerprint": "fp-doc-export-k9l0m1n2",
+      "trace_id": "trace-ir-003"
+    }
+  ],
+  "policy_traces": [
+    {
+      "trace_id": "trace-ir-001",
+      "run_id": "run-ir-001",
+      "action_id": "action-ir-001",
+      "evaluated_at": "2026-07-02T14:30:02Z",
+      "rules_evaluated": [
+        {
+          "rule_name": "require-research-read-authority",
+          "matched": true,
+          "result": "allow",
+          "reason": "AuthorityRecord auth-ir-001 grants research:read scope."
+        }
+      ],
+      "final_result": "allow",
+      "deterministic_fingerprint": "fp-doc-search-c1d2e3f4"
+    },
+    {
+      "trace_id": "trace-ir-002",
+      "run_id": "run-ir-001",
+      "action_id": "action-ir-002",
+      "evaluated_at": "2026-07-02T14:30:06Z",
+      "rules_evaluated": [
+        {
+          "rule_name": "require-research-read-authority",
+          "matched": true,
+          "result": "allow",
+          "reason": "AuthorityRecord auth-ir-001 grants research:read scope covering file reads."
+        }
+      ],
+      "final_result": "allow",
+      "deterministic_fingerprint": "fp-file-read-g5h6i7j8"
+    },
+    {
+      "trace_id": "trace-ir-003",
+      "run_id": "run-ir-001",
+      "action_id": "action-ir-003",
+      "evaluated_at": "2026-07-02T14:30:16Z",
+      "rules_evaluated": [
+        {
+          "rule_name": "require-export-authority",
+          "matched": false,
+          "result": "escalate",
+          "reason": "No export authority present. Policy requires escalation to human supervisor."
+        }
+      ],
+      "final_result": "escalate",
+      "deterministic_fingerprint": "fp-doc-export-k9l0m1n2"
+    }
+  ],
+  "blocked_actions": [],
+  "authority_records": [
+    {
+      "authority_id": "auth-ir-001",
+      "run_id": "run-ir-001",
+      "actor": "research-assistant",
+      "scope": ["research:read", "doc:search", "file:read"],
+      "source": "team-policy-delegation",
+      "expires_at": "2026-07-02T20:00:00Z",
+      "created_at": "2026-07-02T14:29:50Z"
+    }
+  ],
+  "reliance_records": [
+    {
+      "reliance_id": "reliance-ir-001",
+      "run_id": "run-ir-001",
+      "source_name": "internal-doc-search",
+      "source_type": "tool",
+      "scope": "Q3 market trend research documents",
+      "referenced_action_id": "action-ir-001",
+      "created_at": "2026-07-02T14:30:03Z"
+    },
+    {
+      "reliance_id": "reliance-ir-002",
+      "run_id": "run-ir-001",
+      "source_name": "q3-market-analysis-2026.md",
+      "source_type": "file",
+      "scope": "Full content of Q3 market analysis document",
+      "referenced_action_id": "action-ir-002",
+      "created_at": "2026-07-02T14:30:07Z"
+    }
+  ],
+  "final_output": "Summary report generated: Q3 market trends indicate significant growth in AI tooling adoption across enterprise sectors. Key findings: (1) 42% increase in AI-assisted workflow automation; (2) Budget allocation for AI governance tooling up 28% YoY; (3) Three emerging vendor categories identified. Export escalated for supervisor approval.",
+  "validation_report": {
+    "valid": true,
+    "checked_object_type": "AgentReplayBundle",
+    "checked_id": "bundle-ir-001",
+    "issues": [
+      {
+        "severity": "warning",
+        "code": "W012",
+        "message": "signature_metadata is missing.",
+        "path": "signature_metadata"
+      }
+    ]
+  },
+  "redaction_metadata": null,
+  "signature_metadata": null,
+  "metadata": {
+    "project_ref": "PROJ-Q3-2026",
+    "requested_by": "research-lead"
+  }
+}

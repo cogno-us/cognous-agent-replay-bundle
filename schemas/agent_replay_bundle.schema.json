@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/agent_replay_bundle.schema.json",
+  "title": "AgentReplayBundle",
+  "description": "A portable evidence package for a completed or partially completed AI-agent run.",
+  "type": "object",
+  "required": ["bundle_id", "run_id", "generated_at", "frame"],
+  "additionalProperties": false,
+  "properties": {
+    "bundle_id": {
+      "type": "string",
+      "description": "Unique identifier for this replay bundle."
+    },
+    "bundle_version": {
+      "type": "string",
+      "description": "Version of the replay bundle format.",
+      "default": "0.1"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Unique identifier for the agent run this bundle covers."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["complete", "partial", "redacted"],
+      "description": "Completion or redaction status of the bundle.",
+      "default": "complete"
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when this bundle was generated."
+    },
+    "producer": {
+      "type": ["string", "null"],
+      "description": "Optional identifier of the system or component that produced this bundle."
+    },
+    "frame": {
+      "$ref": "run_frame.schema.json",
+      "description": "The task frame describing the run context."
+    },
+    "action_proposals": {
+      "type": "array",
+      "items": { "$ref": "action_proposal.schema.json" },
+      "description": "All action proposals made by the agent during the run.",
+      "default": []
+    },
+    "policy_decisions": {
+      "type": "array",
+      "items": { "$ref": "policy_decision.schema.json" },
+      "description": "All policy decisions made in response to action proposals.",
+      "default": []
+    },
+    "policy_traces": {
+      "type": "array",
+      "items": { "$ref": "policy_evaluation_trace.schema.json" },
+      "description": "Detailed policy evaluation traces for action proposals.",
+      "default": []
+    },
+    "blocked_actions": {
+      "type": "array",
+      "items": { "$ref": "blocked_action.schema.json" },
+      "description": "Records of actions that were blocked by policy.",
+      "default": []
+    },
+    "authority_records": {
+      "type": "array",
+      "items": { "$ref": "authority_record.schema.json" },
+      "description": "Authority grants in scope for this run.",
+      "default": []
+    },
+    "reliance_records": {
+      "type": "array",
+      "items": { "$ref": "reliance_record.schema.json" },
+      "description": "Data sources the agent relied on during the run.",
+      "default": []
+    },
+    "final_output": {
+      "type": ["string", "null"],
+      "description": "The final output produced by the agent run, if available."
+    },
+    "validation_report": {
+      "oneOf": [
+        { "$ref": "validation_report.schema.json" },
+        { "type": "null" }
+      ],
+      "description": "An embedded validation report for this bundle, if generated."
+    },
+    "redaction_metadata": {
+      "oneOf": [
+        { "$ref": "redaction_metadata.schema.json" },
+        { "type": "null" }
+      ],
+      "description": "Metadata describing any redaction applied to this bundle."
+    },
+    "signature_metadata": {
+      "oneOf": [
+        { "$ref": "signature_metadata.schema.json" },
+        { "type": "null" }
+      ],
+      "description": "Metadata describing any export integrity signature applied."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary additional metadata about the bundle.",
+      "default": {}
+    }
+  }
+}

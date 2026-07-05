@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/action_proposal.schema.json",
+  "title": "ActionProposal",
+  "description": "A single action proposed by the agent during a run.",
+  "type": "object",
+  "required": ["action_id", "run_id", "tool_name", "action_type", "target", "proposed_at"],
+  "additionalProperties": false,
+  "properties": {
+    "action_id": {
+      "type": "string",
+      "description": "Unique identifier for this action proposal."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "The run this proposal belongs to."
+    },
+    "tool_name": {
+      "type": "string",
+      "description": "The tool the agent proposed to invoke."
+    },
+    "action_type": {
+      "type": "string",
+      "enum": ["read", "write", "external_send", "delete", "export", "purchase", "approve", "escalate", "other"],
+      "description": "Category of action being proposed."
+    },
+    "target": {
+      "type": "string",
+      "description": "The resource or endpoint the action targets."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Parameters or data the action would send.",
+      "default": {}
+    },
+    "proposed_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the proposal was generated."
+    },
+    "reason": {
+      "type": ["string", "null"],
+      "description": "The agent's stated reason for proposing this action."
+    }
+  }
+}

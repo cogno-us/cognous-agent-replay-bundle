@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/blocked_action.schema.json",
+  "title": "BlockedAction",
+  "description": "A record of an action that was blocked by policy.",
+  "type": "object",
+  "required": ["blocked_id", "action_id", "run_id", "reason", "policy_name", "blocked_at"],
+  "additionalProperties": false,
+  "properties": {
+    "blocked_id": {
+      "type": "string",
+      "description": "Unique identifier for this blocked action record."
+    },
+    "action_id": {
+      "type": "string",
+      "description": "The action proposal that was blocked."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "The run this blocked action belongs to."
+    },
+    "reason": {
+      "type": "string",
+      "description": "The reason the action was blocked."
+    },
+    "policy_name": {
+      "type": "string",
+      "description": "The policy that blocked the action."
+    },
+    "blocked_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the action was blocked."
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/run_frame.schema.json",
+  "title": "RunFrame",
+  "description": "The task frame describing the context and policy environment for an agent run.",
+  "type": "object",
+  "required": ["frame_id", "task", "actor", "environment", "policy_version", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "frame_id": {
+      "type": "string",
+      "description": "Unique identifier for this run frame."
+    },
+    "task": {
+      "type": "string",
+      "description": "The task or goal the agent was given."
+    },
+    "actor": {
+      "type": "string",
+      "description": "The agent or system performing the run."
+    },
+    "environment": {
+      "type": "string",
+      "description": "The environment in which the run occurred (e.g. production, staging)."
+    },
+    "allowed_tools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tools the agent was permitted to use.",
+      "default": []
+    },
+    "blocked_tools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tools the agent was explicitly prohibited from using.",
+      "default": []
+    },
+    "policy_version": {
+      "type": "string",
+      "description": "The version of the policy set applied during the run."
+    },
+    "created_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the frame was created."
+    }
+  }
+}

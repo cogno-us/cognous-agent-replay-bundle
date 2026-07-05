@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/reliance_record.schema.json",
+  "title": "RelianceRecord",
+  "description": "A record of a data source the agent relied on during the run.",
+  "type": "object",
+  "required": ["reliance_id", "run_id", "source_name", "source_type", "scope", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "reliance_id": {
+      "type": "string",
+      "description": "Unique identifier for this reliance record."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "The run this reliance record belongs to."
+    },
+    "source_name": {
+      "type": "string",
+      "description": "Name of the data source that was consulted."
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["tool", "database", "file", "api", "user_input", "model_output", "other"],
+      "description": "Category of the data source."
+    },
+    "scope": {
+      "type": "string",
+      "description": "Description of what aspect of the source was relied upon."
+    },
+    "referenced_action_id": {
+      "type": ["string", "null"],
+      "description": "Optional reference to the action proposal that triggered this reliance."
+    },
+    "created_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the reliance was recorded."
+    }
+  }
+}
