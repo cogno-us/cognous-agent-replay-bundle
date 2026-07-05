@@ -46,6 +46,7 @@ A bundle is **valid** (`report.valid = True`) when no error-severity issues are 
 | E018 | Every `PolicyDecision.trace_id`, when present, must reference an existing `PolicyEvaluationTrace.trace_id` |
 | E019 | When `trace_id` is present, the trace `deterministic_fingerprint` must match the decision `deterministic_fingerprint` |
 | E020 | When `trace_id` is present, the trace `final_result` must match the decision `result` |
+| E021 | Reserved for complete-bundle final-output checks |
 | E022 | If `signature_metadata.signed` is true, `signature_algorithm` must be present |
 | E023 | If `signature_metadata.signed` is true, `signature` must be present |
 | E024 | If `redaction_metadata.redacted` is true, `redacted_at` must be present |
@@ -68,6 +69,8 @@ A bundle is **valid** (`report.valid = True`) when no error-severity issues are 
 | W011 | An action payload contains potentially sensitive keys (email, phone, ssn, account_number, customer_id, address, token, secret, password) but `redaction_metadata` is not present |
 | W012 | `signature_metadata` is missing |
 | W013 | Embedded `validation_report.checked_id` does not match `bundle_id` |
+
+Complete bundles without `final_output` currently produce warning `W010`, not error `E021`.
 
 ## Embedded validation report
 

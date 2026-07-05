@@ -13,9 +13,9 @@ from .models import AgentReplayBundle, SignatureMetadata, SignedReplayBundle
 def canonical_bundle_json(bundle: AgentReplayBundle) -> str:
     """Produce a canonical JSON string of the bundle for signing.
 
-    The ``signature_metadata.signature`` field is excluded from the canonical
-    representation so that the signature can be embedded without breaking
-    verification.  All keys are sorted and compact separators are used to
+    The entire ``signature_metadata`` field is excluded from the canonical
+    representation so that embedded signature state does not affect signing or
+    verification. All keys are sorted and compact separators are used to
     guarantee a stable, reproducible encoding.
 
     Args:
@@ -25,11 +25,7 @@ def canonical_bundle_json(bundle: AgentReplayBundle) -> str:
         A canonical JSON string suitable for hashing.
     """
     data = bundle.model_dump(mode="json")
-    # Strip signature from canonical form to avoid circularity
-    if data.get("signature_metadata") is not None:
-        data["signature_metadata"] = {
-            k: v for k, v in data["signature_metadata"].items() if k != "signature"
-        }
+    data.pop("signature_metadata", None)
     return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
 
 
