@@ -68,10 +68,10 @@ arb verify /tmp/signed.json --secret "my-secret"
 The canonical form of a bundle is produced by:
 
 1. Calling `bundle.model_dump(mode="json")`
-2. Stripping the `signature` field from `signature_metadata` (to avoid circularity)
+2. Removing the entire `signature_metadata` field from the `AgentReplayBundle` payload
 3. Serializing with `sort_keys=True`, compact separators `(",", ":")`, and `ensure_ascii=True`
 
-The canonical form is stable: the same bundle will always produce the same canonical string.
+The canonical form is stable: the same bundle will always produce the same canonical string when all non-signature fields match, regardless of any embedded `signature_metadata`.
 
 ## SignatureMetadata
 
@@ -99,4 +99,6 @@ The output of signing is a `SignedReplayBundle`:
 }
 ```
 
-The `signature_metadata` at the top level matches the `signature_metadata` embedded in the `replay_bundle`.
+`SignedReplayBundle.signature_metadata` is the authoritative signature metadata for signed exports.
+
+`AgentReplayBundle.signature_metadata` is optional embedded metadata for systems that store signature state directly on the bundle. It is not part of the canonical signing payload.

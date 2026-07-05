@@ -174,6 +174,8 @@ is_valid = verify_signed_replay_bundle(signed, secret="my-secret")
 
 Signing uses HMAC-SHA256 with a caller-supplied secret. This is export integrity — not production key management. See [docs/signing.md](docs/signing.md) for details and limitations.
 
+For signed exports, `SignedReplayBundle.signature_metadata` is the authoritative signature metadata. `AgentReplayBundle.signature_metadata` is optional embedded metadata for systems that store signature state directly on the bundle.
+
 ---
 
 ## Relationship to Agent Control Plane
@@ -221,4 +223,4 @@ See [docs/roadmap.md](docs/roadmap.md).
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0. See LICENSE and NOTICE.

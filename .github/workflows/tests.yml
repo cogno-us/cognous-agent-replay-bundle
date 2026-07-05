@@ -26,3 +26,6 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+      - name: Check examples
+        run: arb check-examples

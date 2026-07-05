@@ -7,6 +7,7 @@ from agent_replay_bundle.models import (
     ActionType,
     AgentReplayBundle,
     RunFrame,
+    SignatureMetadata,
     SignedReplayBundle,
 )
 from agent_replay_bundle.signing import (
@@ -90,7 +91,6 @@ class TestCanonicalSerialization:
         assert result1 == result2
 
     def test_canonical_json_excludes_signature(self):
-        from agent_replay_bundle.models import SignatureMetadata
         bundle = make_bundle(
             signature_metadata=SignatureMetadata(
                 signed=True,
@@ -100,6 +100,49 @@ class TestCanonicalSerialization:
         )
         canonical = canonical_bundle_json(bundle)
         assert "supersecret" not in canonical
+        assert "signature_metadata" not in canonical
+
+    def test_canonical_json_ignores_embedded_signature_metadata(self):
+        bundle_without_signature_metadata = make_bundle()
+        bundle_with_signature_metadata = make_bundle(
+            signature_metadata=SignatureMetadata(
+                signed=True,
+                signed_at="2026-01-01T00:00:01Z",
+                signature="embedded-signature",
+                signature_algorithm="HMAC-SHA256",
+                key_id="key-001",
+            )
+        )
+
+        assert canonical_bundle_json(bundle_without_signature_metadata) == canonical_bundle_json(bundle_with_signature_metadata)
+
+    def test_verification_succeeds_with_embedded_signature_metadata_and_correct_secret(self):
+        bundle = make_bundle(
+            signature_metadata=SignatureMetadata(
+                signed=True,
+                signed_at="2026-01-01T00:00:01Z",
+                signature="stale-signature",
+                signature_algorithm="HMAC-SHA256",
+                key_id="embedded-key",
+            )
+        )
+
+        signed = sign_replay_bundle(bundle, "correct-secret")
+        assert verify_signed_replay_bundle(signed, "correct-secret") is True
+
+    def test_verification_fails_with_embedded_signature_metadata_and_wrong_secret(self):
+        bundle = make_bundle(
+            signature_metadata=SignatureMetadata(
+                signed=True,
+                signed_at="2026-01-01T00:00:01Z",
+                signature="stale-signature",
+                signature_algorithm="HMAC-SHA256",
+                key_id="embedded-key",
+            )
+        )
+
+        signed = sign_replay_bundle(bundle, "correct-secret")
+        assert verify_signed_replay_bundle(signed, "wrong-secret") is False
 
     def test_canonical_json_sorted_keys(self):
         import json

@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "A portable replay-bundle format for recording AI-agent runs for audit, review, redaction, signing, validation, and incident reconstruction."
 readme = "README.md"
 license = { text = "Apache-2.0" }
+authors = [{ name = "Cognous", email = "andredelima@cogno.us" }]
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.0",
