@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/policy_rule_evaluation.schema.json",
+  "title": "PolicyRuleEvaluation",
+  "description": "The result of evaluating a single policy rule within a trace.",
+  "type": "object",
+  "required": ["rule_name", "matched", "result", "reason"],
+  "additionalProperties": false,
+  "properties": {
+    "rule_name": {
+      "type": "string",
+      "description": "Name of the policy rule that was evaluated."
+    },
+    "matched": {
+      "type": "boolean",
+      "description": "Whether the rule matched the action proposal."
+    },
+    "result": {
+      "type": "string",
+      "enum": ["allow", "block", "escalate", "none"],
+      "description": "The result produced by this rule."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Explanation of why the rule produced this result."
+    }
+  }
+}

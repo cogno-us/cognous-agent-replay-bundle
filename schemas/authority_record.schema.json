@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/authority_record.schema.json",
+  "title": "AuthorityRecord",
+  "description": "A record of authority granted to the actor for this run.",
+  "type": "object",
+  "required": ["authority_id", "run_id", "actor", "scope", "source", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "authority_id": {
+      "type": "string",
+      "description": "Unique identifier for this authority record."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "The run this authority record applies to."
+    },
+    "actor": {
+      "type": "string",
+      "description": "The agent or principal that holds this authority."
+    },
+    "scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The list of permissions or capabilities covered by this authority."
+    },
+    "source": {
+      "type": "string",
+      "description": "Where the authority originated (e.g. user delegation, system policy)."
+    },
+    "expires_at": {
+      "type": ["string", "null"],
+      "description": "Optional ISO 8601 timestamp when this authority expires."
+    },
+    "created_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the authority was granted."
+    }
+  }
+}

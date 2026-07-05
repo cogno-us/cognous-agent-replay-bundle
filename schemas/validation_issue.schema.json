@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/validation_issue.schema.json",
+  "title": "ValidationIssue",
+  "description": "A single issue found during bundle validation.",
+  "type": "object",
+  "required": ["severity", "code", "message"],
+  "additionalProperties": false,
+  "properties": {
+    "severity": {
+      "type": "string",
+      "enum": ["error", "warning"],
+      "description": "Whether this issue is an error or a warning."
+    },
+    "code": {
+      "type": "string",
+      "description": "A stable code string identifying the type of issue."
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable description of the issue."
+    },
+    "path": {
+      "type": ["string", "null"],
+      "description": "Optional dot-path to the field or object that triggered this issue."
+    }
+  }
+}

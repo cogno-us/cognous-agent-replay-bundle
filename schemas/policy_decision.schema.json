@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/policy_decision.schema.json",
+  "title": "PolicyDecision",
+  "description": "A policy decision made in response to an action proposal.",
+  "type": "object",
+  "required": ["decision_id", "action_id", "run_id", "result", "policy_name", "reason", "decided_at", "deterministic_fingerprint"],
+  "additionalProperties": false,
+  "properties": {
+    "decision_id": {
+      "type": "string",
+      "description": "Unique identifier for this policy decision."
+    },
+    "action_id": {
+      "type": "string",
+      "description": "The action proposal this decision applies to."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "The run this decision belongs to."
+    },
+    "result": {
+      "type": "string",
+      "enum": ["allow", "block", "escalate"],
+      "description": "The outcome of the policy evaluation."
+    },
+    "policy_name": {
+      "type": "string",
+      "description": "Name of the policy that produced this decision."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable explanation of why this decision was made."
+    },
+    "decided_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the decision was made."
+    },
+    "deterministic_fingerprint": {
+      "type": "string",
+      "description": "A stable hash of the policy inputs, used for integrity verification."
+    },
+    "trace_id": {
+      "type": ["string", "null"],
+      "description": "Optional reference to the PolicyEvaluationTrace for this decision."
+    }
+  }
+}

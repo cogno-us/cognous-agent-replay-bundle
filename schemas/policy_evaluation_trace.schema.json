@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/policy_evaluation_trace.schema.json",
+  "title": "PolicyEvaluationTrace",
+  "description": "A detailed trace of the policy evaluation process for an action proposal.",
+  "type": "object",
+  "required": ["trace_id", "run_id", "action_id", "evaluated_at", "final_result", "deterministic_fingerprint"],
+  "additionalProperties": false,
+  "properties": {
+    "trace_id": {
+      "type": "string",
+      "description": "Unique identifier for this evaluation trace."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "The run this trace belongs to."
+    },
+    "action_id": {
+      "type": "string",
+      "description": "The action proposal this trace covers."
+    },
+    "evaluated_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the evaluation occurred."
+    },
+    "rules_evaluated": {
+      "type": "array",
+      "items": { "$ref": "policy_rule_evaluation.schema.json" },
+      "description": "Individual rule evaluations that contributed to the final result.",
+      "default": []
+    },
+    "final_result": {
+      "type": "string",
+      "enum": ["allow", "block", "escalate"],
+      "description": "The final policy decision produced by this trace."
+    },
+    "deterministic_fingerprint": {
+      "type": "string",
+      "description": "A stable hash of the evaluation inputs, matching the corresponding PolicyDecision."
+    }
+  }
+}

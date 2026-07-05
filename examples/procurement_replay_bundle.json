@@ -1,0 +1,249 @@
+{
+  "bundle_id": "bundle-pr-001",
+  "bundle_version": "0.1",
+  "run_id": "run-pr-001",
+  "status": "complete",
+  "generated_at": "2026-07-03T09:45:00Z",
+  "producer": "procurement-agent-v1",
+  "frame": {
+    "frame_id": "frame-pr-001",
+    "task": "Compare vendor quotes for office supplies, select the best vendor, and create a purchase order.",
+    "actor": "procurement-agent",
+    "environment": "production",
+    "allowed_tools": ["vendor_quote_read", "vendor_compare", "purchase_order_draft"],
+    "blocked_tools": ["purchase_order_approve", "payment_initiate", "contract_sign"],
+    "policy_version": "procurement-policy-v1.5",
+    "created_at": "2026-07-03T09:44:50Z"
+  },
+  "action_proposals": [
+    {
+      "action_id": "action-pr-001",
+      "run_id": "run-pr-001",
+      "tool_name": "vendor_quote_read",
+      "action_type": "read",
+      "target": "procurement://quotes/2026-Q3-office-supplies",
+      "payload": {
+        "category": "office-supplies",
+        "period": "2026-Q3"
+      },
+      "proposed_at": "2026-07-03T09:45:01Z",
+      "reason": "Retrieve all vendor quotes for Q3 office supplies procurement."
+    },
+    {
+      "action_id": "action-pr-002",
+      "run_id": "run-pr-001",
+      "tool_name": "purchase_order_draft",
+      "action_type": "write",
+      "target": "procurement://orders/draft",
+      "payload": {
+        "vendor_id": "vendor-acme-supplies",
+        "items": [
+          {"sku": "PAPER-A4-500", "qty": 100},
+          {"sku": "PEN-BLK-BX", "qty": 50}
+        ],
+        "estimated_total_usd": 1240.00
+      },
+      "proposed_at": "2026-07-03T09:45:10Z",
+      "reason": "Create a draft purchase order for the selected vendor after comparison."
+    },
+    {
+      "action_id": "action-pr-003",
+      "run_id": "run-pr-001",
+      "tool_name": "purchase_order_approve",
+      "action_type": "approve",
+      "target": "procurement://orders/PO-20260703-001/approve",
+      "payload": {
+        "order_id": "PO-20260703-001",
+        "approver": "procurement-agent"
+      },
+      "proposed_at": "2026-07-03T09:45:18Z",
+      "reason": "Approve the purchase order to initiate vendor fulfillment."
+    },
+    {
+      "action_id": "action-pr-004",
+      "run_id": "run-pr-001",
+      "tool_name": "email_compose",
+      "action_type": "external_send",
+      "target": "smtp://outbound/vendor-notification",
+      "payload": {
+        "to": "vendor-acme@example.com",
+        "subject": "Purchase Order PO-20260703-001",
+        "body": "Please find attached purchase order PO-20260703-001 for Q3 office supplies."
+      },
+      "proposed_at": "2026-07-03T09:45:22Z",
+      "reason": "Notify the selected vendor of the purchase order."
+    }
+  ],
+  "policy_decisions": [
+    {
+      "decision_id": "decision-pr-001",
+      "action_id": "action-pr-001",
+      "run_id": "run-pr-001",
+      "result": "allow",
+      "policy_name": "vendor-quote-read-policy",
+      "reason": "procurement-agent has read authority over vendor quotes.",
+      "decided_at": "2026-07-03T09:45:02Z",
+      "deterministic_fingerprint": "fp-quote-read-aa11bb22",
+      "trace_id": "trace-pr-001"
+    },
+    {
+      "decision_id": "decision-pr-002",
+      "action_id": "action-pr-002",
+      "run_id": "run-pr-001",
+      "result": "allow",
+      "policy_name": "purchase-order-draft-policy",
+      "reason": "Drafting a purchase order is within procurement-agent authority scope.",
+      "decided_at": "2026-07-03T09:45:11Z",
+      "deterministic_fingerprint": "fp-po-draft-cc33dd44",
+      "trace_id": "trace-pr-002"
+    },
+    {
+      "decision_id": "decision-pr-003",
+      "action_id": "action-pr-003",
+      "run_id": "run-pr-001",
+      "result": "block",
+      "policy_name": "purchase-order-approve-policy",
+      "reason": "purchase_order_approve is a blocked tool. Approval requires human authorization.",
+      "decided_at": "2026-07-03T09:45:19Z",
+      "deterministic_fingerprint": "fp-po-approve-ee55ff66",
+      "trace_id": "trace-pr-003"
+    },
+    {
+      "decision_id": "decision-pr-004",
+      "action_id": "action-pr-004",
+      "run_id": "run-pr-001",
+      "result": "block",
+      "policy_name": "external-send-policy",
+      "reason": "external_send to vendor requires explicit external_send authority. Not granted for this run.",
+      "decided_at": "2026-07-03T09:45:23Z",
+      "deterministic_fingerprint": "fp-vendor-email-gg77hh88",
+      "trace_id": "trace-pr-004"
+    }
+  ],
+  "policy_traces": [
+    {
+      "trace_id": "trace-pr-001",
+      "run_id": "run-pr-001",
+      "action_id": "action-pr-001",
+      "evaluated_at": "2026-07-03T09:45:02Z",
+      "rules_evaluated": [
+        {
+          "rule_name": "require-procurement-read-authority",
+          "matched": true,
+          "result": "allow",
+          "reason": "AuthorityRecord auth-pr-001 grants procurement:read scope."
+        }
+      ],
+      "final_result": "allow",
+      "deterministic_fingerprint": "fp-quote-read-aa11bb22"
+    },
+    {
+      "trace_id": "trace-pr-002",
+      "run_id": "run-pr-001",
+      "action_id": "action-pr-002",
+      "evaluated_at": "2026-07-03T09:45:11Z",
+      "rules_evaluated": [
+        {
+          "rule_name": "require-po-draft-authority",
+          "matched": true,
+          "result": "allow",
+          "reason": "AuthorityRecord auth-pr-001 grants procurement:draft scope."
+        }
+      ],
+      "final_result": "allow",
+      "deterministic_fingerprint": "fp-po-draft-cc33dd44"
+    },
+    {
+      "trace_id": "trace-pr-003",
+      "run_id": "run-pr-001",
+      "action_id": "action-pr-003",
+      "evaluated_at": "2026-07-03T09:45:19Z",
+      "rules_evaluated": [
+        {
+          "rule_name": "blocked-tool-check",
+          "matched": true,
+          "result": "block",
+          "reason": "purchase_order_approve is listed in blocked_tools for this run frame."
+        }
+      ],
+      "final_result": "block",
+      "deterministic_fingerprint": "fp-po-approve-ee55ff66"
+    },
+    {
+      "trace_id": "trace-pr-004",
+      "run_id": "run-pr-001",
+      "action_id": "action-pr-004",
+      "evaluated_at": "2026-07-03T09:45:23Z",
+      "rules_evaluated": [
+        {
+          "rule_name": "require-external-send-authority",
+          "matched": false,
+          "result": "block",
+          "reason": "No external_send authority found for procurement-agent in this run."
+        }
+      ],
+      "final_result": "block",
+      "deterministic_fingerprint": "fp-vendor-email-gg77hh88"
+    }
+  ],
+  "blocked_actions": [
+    {
+      "blocked_id": "blocked-pr-001",
+      "action_id": "action-pr-003",
+      "run_id": "run-pr-001",
+      "reason": "purchase_order_approve is a blocked tool. Approval requires human authorization.",
+      "policy_name": "purchase-order-approve-policy",
+      "blocked_at": "2026-07-03T09:45:19Z"
+    },
+    {
+      "blocked_id": "blocked-pr-002",
+      "action_id": "action-pr-004",
+      "run_id": "run-pr-001",
+      "reason": "external_send to vendor requires explicit external_send authority. Not granted for this run.",
+      "policy_name": "external-send-policy",
+      "blocked_at": "2026-07-03T09:45:23Z"
+    }
+  ],
+  "authority_records": [
+    {
+      "authority_id": "auth-pr-001",
+      "run_id": "run-pr-001",
+      "actor": "procurement-agent",
+      "scope": ["procurement:read", "procurement:draft", "vendor:compare"],
+      "source": "procurement-service-policy",
+      "expires_at": "2026-07-03T17:00:00Z",
+      "created_at": "2026-07-03T09:44:50Z"
+    }
+  ],
+  "reliance_records": [
+    {
+      "reliance_id": "reliance-pr-001",
+      "run_id": "run-pr-001",
+      "source_name": "vendor-quote-service",
+      "source_type": "api",
+      "scope": "Q3 office supplies vendor quotes",
+      "referenced_action_id": "action-pr-001",
+      "created_at": "2026-07-03T09:45:03Z"
+    }
+  ],
+  "final_output": "Vendor comparison completed. Acme Supplies selected as best value for Q3 office supplies (estimated $1,240.00). Draft purchase order PO-20260703-001 created. Approval and vendor notification are pending human authorization.",
+  "validation_report": {
+    "valid": true,
+    "checked_object_type": "AgentReplayBundle",
+    "checked_id": "bundle-pr-001",
+    "issues": [
+      {
+        "severity": "warning",
+        "code": "W012",
+        "message": "signature_metadata is missing.",
+        "path": "signature_metadata"
+      }
+    ]
+  },
+  "redaction_metadata": null,
+  "signature_metadata": null,
+  "metadata": {
+    "budget_code": "BUDGET-2026-Q3-OFFICE",
+    "approver_queue": "procurement-manager"
+  }
+}

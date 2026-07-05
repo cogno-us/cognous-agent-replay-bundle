@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/validation_report.schema.json",
+  "title": "ValidationReport",
+  "description": "The result of validating an AgentReplayBundle.",
+  "type": "object",
+  "required": ["valid", "checked_id"],
+  "additionalProperties": false,
+  "properties": {
+    "valid": {
+      "type": "boolean",
+      "description": "True only when no error-severity issues were found."
+    },
+    "checked_object_type": {
+      "type": "string",
+      "description": "The type of object that was validated.",
+      "default": "AgentReplayBundle"
+    },
+    "checked_id": {
+      "type": "string",
+      "description": "The bundle_id (or signed_bundle_id) of the validated object."
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "validation_issue.schema.json" },
+      "description": "List of validation issues found (errors and warnings).",
+      "default": []
+    }
+  }
+}

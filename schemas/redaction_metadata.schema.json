@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/redaction_metadata.schema.json",
+  "title": "RedactionMetadata",
+  "description": "Metadata describing what was redacted from the bundle.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "redacted": {
+      "type": "boolean",
+      "description": "Whether any redaction has been applied to this bundle.",
+      "default": false
+    },
+    "redacted_at": {
+      "type": ["string", "null"],
+      "description": "ISO 8601 timestamp when redaction was performed."
+    },
+    "redacted_fields": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of field paths that were redacted.",
+      "default": []
+    },
+    "redaction_policy": {
+      "type": ["string", "null"],
+      "description": "Name or identifier of the redaction policy applied."
+    },
+    "replacement": {
+      "type": "string",
+      "description": "The placeholder value used to replace redacted content.",
+      "default": "[REDACTED]"
+    },
+    "notes": {
+      "type": ["string", "null"],
+      "description": "Optional human-readable notes about the redaction."
+    }
+  }
+}

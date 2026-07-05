@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognous.io/schemas/signed_replay_bundle.schema.json",
+  "title": "SignedReplayBundle",
+  "description": "A replay bundle paired with its export integrity signature.",
+  "type": "object",
+  "required": ["signed_bundle_id", "replay_bundle", "signature_metadata"],
+  "additionalProperties": false,
+  "properties": {
+    "signed_bundle_id": {
+      "type": "string",
+      "description": "Unique identifier for this signed bundle."
+    },
+    "replay_bundle": {
+      "$ref": "agent_replay_bundle.schema.json",
+      "description": "The underlying replay bundle."
+    },
+    "signature_metadata": {
+      "$ref": "signature_metadata.schema.json",
+      "description": "The signature applied to the replay bundle."
+    }
+  }
+}

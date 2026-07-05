@@ -1,0 +1,169 @@
+{
+  "bundle_id": "bundle-cs-001-redacted",
+  "bundle_version": "0.1",
+  "run_id": "run-cs-001",
+  "status": "redacted",
+  "generated_at": "2026-07-01T10:15:00Z",
+  "producer": "customer-service-agent-v2",
+  "frame": {
+    "frame_id": "frame-cs-001",
+    "task": "Retrieve customer order history and send a follow-up email confirming the return has been processed.",
+    "actor": "customer-service-agent",
+    "environment": "production",
+    "allowed_tools": ["crm_read", "order_lookup", "email_compose"],
+    "blocked_tools": ["bulk_email_send", "account_delete", "payment_refund_direct"],
+    "policy_version": "cs-policy-v3.1",
+    "created_at": "2026-07-01T10:14:55Z"
+  },
+  "action_proposals": [
+    {
+      "action_id": "action-cs-001",
+      "run_id": "run-cs-001",
+      "tool_name": "crm_read",
+      "action_type": "read",
+      "target": "[REDACTED]",
+      "payload": {"redacted": true},
+      "proposed_at": "2026-07-01T10:15:01Z",
+      "reason": "Need to retrieve the customer's recent order history to confirm the return."
+    },
+    {
+      "action_id": "action-cs-002",
+      "run_id": "run-cs-001",
+      "tool_name": "email_compose",
+      "action_type": "external_send",
+      "target": "[REDACTED]",
+      "payload": {"redacted": true},
+      "proposed_at": "2026-07-01T10:15:08Z",
+      "reason": "Send confirmation email to customer after confirming return is recorded."
+    }
+  ],
+  "policy_decisions": [
+    {
+      "decision_id": "decision-cs-001",
+      "action_id": "action-cs-001",
+      "run_id": "run-cs-001",
+      "result": "allow",
+      "policy_name": "crm-read-policy",
+      "reason": "CRM read is permitted for customer-service-agent in production with valid authority.",
+      "decided_at": "2026-07-01T10:15:02Z",
+      "deterministic_fingerprint": "fp-crm-read-a1b2c3d4",
+      "trace_id": "trace-cs-001"
+    },
+    {
+      "decision_id": "decision-cs-002",
+      "action_id": "action-cs-002",
+      "run_id": "run-cs-001",
+      "result": "block",
+      "policy_name": "external-send-policy",
+      "reason": "external_send requires explicit external_send authority. No such authority record found for this run.",
+      "decided_at": "2026-07-01T10:15:09Z",
+      "deterministic_fingerprint": "fp-email-send-e5f6a7b8",
+      "trace_id": "trace-cs-002"
+    }
+  ],
+  "policy_traces": [
+    {
+      "trace_id": "trace-cs-001",
+      "run_id": "run-cs-001",
+      "action_id": "action-cs-001",
+      "evaluated_at": "2026-07-01T10:15:02Z",
+      "rules_evaluated": [
+        {
+          "rule_name": "require-actor-allowlist",
+          "matched": true,
+          "result": "allow",
+          "reason": "customer-service-agent is in the allowed actor list for crm_read."
+        },
+        {
+          "rule_name": "require-read-authority",
+          "matched": true,
+          "result": "allow",
+          "reason": "AuthorityRecord auth-cs-001 grants crm:read scope."
+        }
+      ],
+      "final_result": "allow",
+      "deterministic_fingerprint": "fp-crm-read-a1b2c3d4"
+    },
+    {
+      "trace_id": "trace-cs-002",
+      "run_id": "run-cs-001",
+      "action_id": "action-cs-002",
+      "evaluated_at": "2026-07-01T10:15:09Z",
+      "rules_evaluated": [
+        {
+          "rule_name": "require-external-send-authority",
+          "matched": false,
+          "result": "block",
+          "reason": "No authority record found granting external_send scope for this run."
+        }
+      ],
+      "final_result": "block",
+      "deterministic_fingerprint": "fp-email-send-e5f6a7b8"
+    }
+  ],
+  "blocked_actions": [
+    {
+      "blocked_id": "blocked-cs-001",
+      "action_id": "action-cs-002",
+      "run_id": "run-cs-001",
+      "reason": "external_send requires explicit external_send authority. No such authority record found for this run.",
+      "policy_name": "external-send-policy",
+      "blocked_at": "2026-07-01T10:15:09Z"
+    }
+  ],
+  "authority_records": [
+    {
+      "authority_id": "auth-cs-001",
+      "run_id": "run-cs-001",
+      "actor": "customer-service-agent",
+      "scope": ["crm:read", "order:read"],
+      "source": "service-account-policy",
+      "expires_at": "2026-07-01T18:00:00Z",
+      "created_at": "2026-07-01T10:14:55Z"
+    }
+  ],
+  "reliance_records": [
+    {
+      "reliance_id": "reliance-cs-001",
+      "run_id": "run-cs-001",
+      "source_name": "crm-service",
+      "source_type": "database",
+      "scope": "Customer order records",
+      "referenced_action_id": "action-cs-001",
+      "created_at": "2026-07-01T10:15:03Z"
+    }
+  ],
+  "final_output": "[REDACTED]",
+  "validation_report": {
+    "valid": true,
+    "checked_object_type": "AgentReplayBundle",
+    "checked_id": "bundle-cs-001-redacted",
+    "issues": [
+      {
+        "severity": "warning",
+        "code": "W012",
+        "message": "signature_metadata is missing.",
+        "path": "signature_metadata"
+      }
+    ]
+  },
+  "redaction_metadata": {
+    "redacted": true,
+    "redacted_at": "2026-07-01T12:00:00Z",
+    "redacted_fields": [
+      "action_proposals[0].payload",
+      "action_proposals[1].payload",
+      "action_proposals[0].target",
+      "action_proposals[1].target",
+      "final_output"
+    ],
+    "redaction_policy": "public-review",
+    "replacement": "[REDACTED]",
+    "notes": "Redacted for external compliance review. Customer identifiers and email content removed."
+  },
+  "signature_metadata": null,
+  "metadata": {
+    "source_bundle_id": "bundle-cs-001",
+    "review_requested_by": "compliance-team"
+  }
+}

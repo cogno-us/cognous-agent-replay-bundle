@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: agent-replay-bundle
+Version: 0.1.0
+Summary: A portable replay-bundle format for recording AI-agent runs for audit, review, redaction, signing, validation, and incident reconstruction.
+License: Apache-2.0
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pydantic>=2.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Dynamic: license-file
+
+# cognous-agent-replay-bundle
+A public JSON schema, validator, and example format for packaging AI-agent runs into portable replay bundles for audit, review, redaction, signing, and incident reconstruction.
