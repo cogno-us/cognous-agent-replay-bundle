@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cogno-us/cognous-agent-replay-bundle/schemas/reconstruction_bundle_0_2.schema.json",
+  "title": "ReconstructionBundle 0.2.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bundle_id", "bundle_version", "status", "generated_at",
+    "producer_profiles", "records", "links", "commitments",
+    "import_reports", "semantics", "integrity", "metadata"
+  ],
+  "properties": {
+    "bundle_id": {"type": "string", "minLength": 1},
+    "bundle_version": {"const": "0.2.0"},
+    "run_id": {"type": ["string", "null"]},
+    "status": {
+      "enum": ["reconstruction_complete", "reconstruction_partial", "incomplete", "redacted"]
+    },
+    "generated_at": {"type": "string", "format": "date-time"},
+    "producer_profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile_id", "producer", "repository", "revision", "format_name"],
+        "properties": {
+          "profile_id": {"type": "string"},
+          "producer": {"type": "string"},
+          "repository": {"type": "string"},
+          "revision": {"type": "string"},
+          "format_name": {"type": "string"},
+          "format_version": {"type": ["string", "null"]},
+          "schema_ref": {"type": ["string", "null"]},
+          "notes": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record_id", "producer_profile_id", "record_type", "source_sequence",
+          "source_path", "identifiers", "evidence_class", "data"
+        ],
+        "properties": {
+          "record_id": {"type": "string"},
+          "producer_profile_id": {"type": "string"},
+          "record_type": {"type": "string"},
+          "source_sequence": {"type": "integer", "minimum": 0},
+          "source_path": {"type": "string"},
+          "recorded_at": {"type": ["string", "null"]},
+          "identifiers": {
+            "type": "object",
+            "additionalProperties": {"type": "string"}
+          },
+          "evidence_class": {
+            "enum": ["producer_reported", "locally_generated", "independently_checked"]
+          },
+          "data": {"type": "object"}
+        }
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "link_type", "from_record_id", "to_record_id", "basis",
+          "establishes_identity_equivalence"
+        ],
+        "properties": {
+          "link_type": {"enum": ["explicit", "shared_reference"]},
+          "from_record_id": {"type": "string"},
+          "to_record_id": {"type": "string"},
+          "basis": {"type": "string"},
+          "establishes_identity_equivalence": {"type": "boolean"}
+        }
+      }
+    },
+    "commitments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label", "value", "algorithm", "canonicalization_profile",
+          "source_record_id", "source_path", "verification_status"
+        ],
+        "properties": {
+          "label": {"type": "string"},
+          "value": {"type": "string"},
+          "algorithm": {"type": "string"},
+          "canonicalization_profile": {"type": "string"},
+          "source_record_id": {"type": "string"},
+          "source_path": {"type": "string"},
+          "verification_status": {
+            "enum": ["not_checked", "checked_match", "checked_mismatch", "attributed_claim"]
+          },
+          "notes": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "import_reports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["adapter_profile", "source_revision", "complete", "field_mappings", "findings"],
+        "properties": {
+          "adapter_profile": {"type": "string"},
+          "source_revision": {"type": "string"},
+          "complete": {"type": "boolean"},
+          "field_mappings": {
+            "type": "object",
+            "additionalProperties": {"type": "string"}
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["code", "category", "severity", "path", "message"],
+              "properties": {
+                "code": {"type": "string"},
+                "category": {
+                  "enum": [
+                    "unmapped_field", "missing_dependency", "unsupported_semantic",
+                    "redaction", "conversion_warning", "value_state"
+                  ]
+                },
+                "severity": {"enum": ["info", "warning", "error"]},
+                "path": {"type": "string"},
+                "message": {"type": "string"},
+                "value_state": {
+                  "type": ["string", "null"],
+                  "enum": ["absent", "unknown", "unavailable", "redacted", null]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_reconstruction", "policy_reevaluation", "model_reexecution",
+        "external_effect_execution", "destination_observation",
+        "independent_effect_verification", "notes"
+      ],
+      "properties": {
+        "record_reconstruction": {"type": "boolean"},
+        "policy_reevaluation": {"type": "boolean"},
+        "model_reexecution": {"type": "boolean"},
+        "external_effect_execution": {"type": "boolean"},
+        "destination_observation": {"enum": ["not_performed", "producer_reported"]},
+        "independent_effect_verification": {"type": "boolean"},
+        "notes": {"type": "string"}
+      }
+    },
+    "derivation": {
+      "type": ["object", "null"],
+      "properties": {
+        "relationship": {"const": "redacted_derivative"},
+        "source_bundle_id": {"type": "string"},
+        "derived_at": {"type": "string", "format": "date-time"}
+      },
+      "required": ["relationship", "source_bundle_id", "derived_at"],
+      "additionalProperties": false
+    },
+    "integrity": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind", "algorithm", "canonicalization_profile", "value",
+          "subject_bundle_id", "verification_claim"
+        ],
+        "properties": {
+          "kind": {"enum": ["content-digest", "hmac"]},
+          "algorithm": {"enum": ["SHA-256", "HMAC-SHA256"]},
+          "canonicalization_profile": {"type": "string"},
+          "value": {"type": "string"},
+          "subject_bundle_id": {"type": "string"},
+          "key_id": {"type": ["string", "null"]},
+          "verification_claim": {"type": "string"}
+        }
+      }
+    },
+    "metadata": {"type": "object"}
+  }
+}

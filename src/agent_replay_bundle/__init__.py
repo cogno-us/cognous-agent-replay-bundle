@@ -1,5 +1,17 @@
 """Agent Replay Bundle - portable evidence package for AI-agent runs."""
 
+from .importers import (
+    ALVORADA_REVISION,
+    BOUNDED_PROFILE,
+    CONTROL_PLANE_REVISION,
+    LEGACY_PROFILE,
+    MANIFEST_REVISION,
+    MOLTBOT_PROFILE,
+    MOLTBOT_SAFE_REVISION,
+    ImportContractError,
+    import_bounded_workflow,
+    import_legacy_control_plane_replay,
+)
 from .loader import dump_replay_bundle, load_replay_bundle, load_replay_bundle_json
 from .models import (
     ActionProposal,
@@ -23,6 +35,24 @@ from .models import (
     ValidationReport,
     ValidationSeverity,
 )
+from .reconstruction import (
+    CANONICAL_JSON_PROFILE,
+    RECONSTRUCTION_BUNDLE_VERSION,
+    CommitmentRecord,
+    DerivationMetadata,
+    ImportFinding,
+    ImportReport,
+    IntegrityMetadata,
+    ProducerProfile,
+    ReconstructionBundle,
+    ReconstructionSemantics,
+    RecordLink,
+    SourceRecord,
+    content_digest,
+    redact_reconstruction_bundle,
+    sign_reconstruction_bundle,
+    verify_reconstruction_hmac,
+)
 from .redaction import redact_replay_bundle
 from .signing import (
     canonical_bundle_json,
@@ -32,32 +62,22 @@ from .signing import (
 from .validator import validate_replay_bundle
 
 __all__ = [
-    "ActionProposal",
-    "ActionType",
-    "AgentReplayBundle",
-    "AuthorityRecord",
-    "BlockedAction",
-    "BundleStatus",
-    "DecisionResult",
-    "PolicyDecision",
-    "PolicyEvaluationTrace",
-    "PolicyRuleEvaluation",
-    "RedactionMetadata",
-    "RelianceRecord",
-    "RunFrame",
-    "SignatureMetadata",
-    "SignedReplayBundle",
-    "SourceType",
-    "TraceRuleResult",
-    "ValidationIssue",
-    "ValidationReport",
-    "ValidationSeverity",
-    "load_replay_bundle",
-    "load_replay_bundle_json",
-    "dump_replay_bundle",
-    "validate_replay_bundle",
-    "redact_replay_bundle",
-    "canonical_bundle_json",
-    "sign_replay_bundle",
-    "verify_signed_replay_bundle",
+    "ActionProposal", "ActionType", "AgentReplayBundle", "AuthorityRecord",
+    "BlockedAction", "BundleStatus", "DecisionResult", "PolicyDecision",
+    "PolicyEvaluationTrace", "PolicyRuleEvaluation", "RedactionMetadata",
+    "RelianceRecord", "RunFrame", "SignatureMetadata", "SignedReplayBundle",
+    "SourceType", "TraceRuleResult", "ValidationIssue", "ValidationReport",
+    "ValidationSeverity", "load_replay_bundle", "load_replay_bundle_json",
+    "dump_replay_bundle", "validate_replay_bundle", "redact_replay_bundle",
+    "canonical_bundle_json", "sign_replay_bundle", "verify_signed_replay_bundle",
+    "RECONSTRUCTION_BUNDLE_VERSION", "CANONICAL_JSON_PROFILE",
+    "ProducerProfile", "SourceRecord", "RecordLink", "CommitmentRecord",
+    "ImportFinding", "ImportReport", "ReconstructionSemantics",
+    "DerivationMetadata", "IntegrityMetadata", "ReconstructionBundle",
+    "content_digest", "redact_reconstruction_bundle",
+    "sign_reconstruction_bundle", "verify_reconstruction_hmac",
+    "ImportContractError", "import_legacy_control_plane_replay",
+    "import_bounded_workflow", "LEGACY_PROFILE", "BOUNDED_PROFILE",
+    "MOLTBOT_PROFILE", "CONTROL_PLANE_REVISION", "MOLTBOT_SAFE_REVISION",
+    "MANIFEST_REVISION", "ALVORADA_REVISION",
 ]

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-replay-bundle"
-version = "0.1.0"
-description = "A portable replay-bundle format for recording AI-agent runs for audit, review, redaction, signing, validation, and incident reconstruction."
+version = "0.2.0"
+description = "Portable evidence reconstruction for AI-agent runs, including revision-pinned producer import, lineage, loss reporting, redaction, integrity, and audit review."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Cognous", email = "andredelima@cogno.us" }]
