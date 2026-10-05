@@ -50,7 +50,16 @@ def _export_sources(workflow, proposal, request, result, destination):
         workflow.records.load().model_dump(mode="json"),
         proposal.model_dump(mode="json", exclude_none=False),
         {
-            "execution_envelope": dataclasses.asdict(request),
+            "execution_envelope": {
+                "version": request.version,
+                "decision_id": request.decision_id,
+                "effect_id": request.effect_id,
+                "operation": {
+                    **dataclasses.asdict(request.operation),
+                    "requested_permissions": list(request.operation.requested_permissions),
+                },
+                "attempt_id": request.attempt_id,
+            },
             "execution_result": dataclasses.asdict(result),
             "effects": _sqlite_rows(destination.path, "effects"),
             "attempts": _sqlite_rows(destination.path, "attempts"),
