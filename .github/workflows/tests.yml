@@ -14,18 +14,67 @@ jobs:
         python-version: ["3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Agent Replay Bundle
+        uses: actions/checkout@v4
+        with:
+          path: replay-bundle
+
+      - name: Checkout pinned Control Plane
+        uses: actions/checkout@v4
+        with:
+          repository: cogno-us/cognous-agent-control-plane
+          ref: 283500652d47a692fb0b99a1172a6d5faffbd9a7
+          path: pinned/control-plane
+
+      - name: Checkout pinned Moltbot Safe
+        uses: actions/checkout@v4
+        with:
+          repository: cogno-us/moltbot-safe
+          ref: 6b0ba1185bcd390f71df947dda349415e4105f5f
+          path: pinned/moltbot-safe
+
+      - name: Checkout pinned Manifest
+        uses: actions/checkout@v4
+        with:
+          repository: cogno-us/cognous-agent-action-manifest
+          ref: 46c950bed37fe3812000895430bc0312d29e37ce
+          path: pinned/manifest
+
+      - name: Checkout pinned Alvorada
+        uses: actions/checkout@v4
+        with:
+          repository: cogno-us/constitutional-governance-for-institutions
+          ref: fb3d97938969a89e149e8ff8db2756091d1233fc
+          path: pinned/alvorada
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Verify pinned revisions
+        shell: bash
+        run: |
+          test "$(git -C pinned/control-plane rev-parse HEAD)" = "283500652d47a692fb0b99a1172a6d5faffbd9a7"
+          test "$(git -C pinned/moltbot-safe rev-parse HEAD)" = "6b0ba1185bcd390f71df947dda349415e4105f5f"
+          test "$(git -C pinned/manifest rev-parse HEAD)" = "46c950bed37fe3812000895430bc0312d29e37ce"
+          test "$(git -C pinned/alvorada rev-parse HEAD)" = "fb3d97938969a89e149e8ff8db2756091d1233fc"
+
       - name: Install package with dev extras
+        working-directory: replay-bundle
         run: pip install -e ".[dev]"
 
-      - name: Run tests
-        run: pytest
+      - name: Install pinned Control Plane runtime dependencies
+        run: pip install -e pinned/control-plane
+
+      - name: Run unit and pinned integration tests
+        working-directory: replay-bundle
+        env:
+          ARB_PINNED_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane
+          ARB_PINNED_MOLTBOT_ROOT: ${{ github.workspace }}/pinned/moltbot-safe
+          ARB_PINNED_MANIFEST_FIXTURE: ${{ github.workspace }}/pinned/manifest/examples/refund_integration_v1_1.manifest.json
+        run: pytest -ra
 
       - name: Check examples
+        working-directory: replay-bundle
         run: arb check-examples
