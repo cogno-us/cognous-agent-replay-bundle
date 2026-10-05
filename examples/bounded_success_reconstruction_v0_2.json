@@ -317,7 +317,7 @@
         "attempt_id": "molt-attempt-success",
         "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "decision_id": "decision-example",
-        "operation_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "operation_digest": "sha256:6d0773d67340b0f8d1bb305ef5d9df56a9944573be896b253a316fa7e4d7fed9",
         "created_at": 1
       }
     },
@@ -379,7 +379,7 @@
       "evidence_class": "producer_reported",
       "data": {
         "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "operation_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "operation_digest": "sha256:6d0773d67340b0f8d1bb305ef5d9df56a9944573be896b253a316fa7e4d7fed9",
         "grant_id": "urn:cognous:grant:routine-1",
         "target": "urn:cognous:synthetic-account:customer-001",
         "amount": 50,
