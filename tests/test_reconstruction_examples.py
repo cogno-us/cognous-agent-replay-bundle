@@ -60,11 +60,12 @@ def _assert_claimed_commitments(bundle: ReconstructionBundle, proposal: dict, mo
 
     operation_digest = _sha256(operation)
     assert destination["operation_digest"] == operation_digest
-    assert all(
-        item.verification_status == "checked_match"
+    checked = {
+        item.label
         for item in bundle.commitments
-        if item.label in {"payload_commitment", "effect_id", "operation_digest"}
-    )
+        if item.verification_status == "checked_match"
+    }
+    assert {"payload_commitment", "effect_id", "operation_digest"} <= checked
 
 
 def _assert_operation_and_destination_binding(proposal: dict, moltbot: dict):
