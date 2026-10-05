@@ -94,7 +94,11 @@ def _validate_envelope_chain(
         "requested_permissions", "amount", "unit", "effects", "requirement_id",
     )
     for field in proposal_fields:
-        _require_equal(op.get(field), proposal.get(field), "execution_envelope.operation." + field)
+        actual = op.get(field)
+        expected = proposal.get(field)
+        if field == "requested_permissions" and isinstance(actual, (list, tuple)) and isinstance(expected, (list, tuple)):
+            actual, expected = list(actual), list(expected)
+        _require_equal(actual, expected, "execution_envelope.operation." + field)
     _require_equal(
         op.get("authority_context_id"), proposal.get("authority_context_ref"),
         "execution_envelope.operation.authority_context_id(profile_ref)",
