@@ -279,7 +279,7 @@ def test_explicit_executor_attempt_link_is_preserved_without_identity_equivalenc
 
 def test_conflicting_immutable_attempt_content_is_rejected():
     cp = bounded_source()
-    cp["attempts"][1]["decision_id"] = "different"
+    cp["attempts"][1]["started_at"] = "2026-10-05T00:00:09Z"
     with pytest.raises(ImportContractError, match="conflicting content"):
         import_bounded_workflow(cp, proposal=proposal_source())
 
