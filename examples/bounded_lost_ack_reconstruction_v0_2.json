@@ -1,9 +1,9 @@
 {
-  "bundle_id": "example-lost-ack-v0-2",
+  "bundle_id": "efab937d-a935-4de6-ba57-de8745ebf1f3",
   "bundle_version": "0.2.0",
-  "run_id": "run-example",
+  "run_id": "run-1",
   "status": "reconstruction_complete",
-  "generated_at": "2026-10-05T19:01:00+00:00",
+  "generated_at": "2026-10-05T22:44:45.176022+00:00",
   "producer_profiles": [
     {
       "profile_id": "control-plane-bounded-run@28350065",
@@ -28,15 +28,15 @@
   ],
   "records": [
     {
-      "record_id": "cp:proposal",
+      "record_id": "control-plane-bounded-run@28350065:runtime_proposal:0",
       "producer_profile_id": "control-plane-bounded-run@28350065",
       "record_type": "runtime_proposal",
       "source_sequence": 0,
       "source_path": "proposal",
       "recorded_at": null,
       "identifiers": {
-        "run_id": "run-example",
-        "correlation_id": "case-example",
+        "run_id": "run-1",
+        "correlation_id": "case-1",
         "action_id": "urn:cognous:action:refund-issue-routine-v1",
         "manifest_id": "refund-integration-pilot-v1",
         "authority_context_profile_ref": "urn:cognous:alvorada:public-stack-profile:0.1.0",
@@ -46,7 +46,7 @@
       "data": {
         "manifest_id": "refund-integration-pilot-v1",
         "manifest_version": "1.1",
-        "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "manifest_digest": "sha256:4d1ad6c96bc242c63998231b4df3ad7c86dc2e5e59cdae63afe7bff86e60f6ac",
         "actor": "urn:cognous:identity:refund-agent-1",
         "principal": "urn:cognous:principal:refund-service",
         "action_id": "urn:cognous:action:refund-issue-routine-v1",
@@ -60,7 +60,7 @@
         "requested_permissions": [
           "refund.issue.routine"
         ],
-        "amount": 50,
+        "amount": 50.0,
         "unit": "USD",
         "effects": 1,
         "authority_context_ref": "urn:cognous:alvorada:public-stack-profile:0.1.0",
@@ -68,8 +68,8 @@
         "risk_metadata": {},
         "not_before": null,
         "expires_at": null,
-        "correlation_id": "case-example",
-        "run_id": "run-example",
+        "correlation_id": "case-1",
+        "run_id": "run-1",
         "expected_side_effects": [],
         "evidence_refs": [
           "urn:cognous:evidence:refund-entitlement"
@@ -77,16 +77,18 @@
       }
     },
     {
-      "record_id": "cp:decision",
+      "record_id": "control-plane-bounded-run@28350065:runtime_decision:1",
       "producer_profile_id": "control-plane-bounded-run@28350065",
       "record_type": "runtime_decision",
       "source_sequence": 1,
       "source_path": "decisions[0]",
       "recorded_at": "2026-10-05T19:00:00+00:00",
       "identifiers": {
-        "run_id": "run-example",
-        "decision_id": "decision-example",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
+        "run_id": "run-1",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "manifest_id": "refund-integration-pilot-v1",
+        "action_id": "urn:cognous:action:refund-issue-routine-v1",
         "grant_id": "urn:cognous:grant:routine-1",
         "grant_revision": "1",
         "authority_context_instance_id": "urn:cognous:authority-context:pilot-1",
@@ -94,16 +96,16 @@
       },
       "evidence_class": "producer_reported",
       "data": {
-        "decision_id": "decision-example",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
         "result": "authorized",
         "reasons": [],
         "decided_at": "2026-10-05T19:00:00+00:00",
         "binding": {
-          "proposal_commitment": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "proposal_commitment": "sha256:133c4baa21d85e41ae7f75af45a96810aa1a175ee3e693913585568630aea96b",
           "manifest_id": "refund-integration-pilot-v1",
           "manifest_version": "1.1",
-          "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "manifest_digest": "sha256:4d1ad6c96bc242c63998231b4df3ad7c86dc2e5e59cdae63afe7bff86e60f6ac",
           "actor": "urn:cognous:identity:refund-agent-1",
           "principal": "urn:cognous:principal:refund-service",
           "action_id": "urn:cognous:action:refund-issue-routine-v1",
@@ -113,14 +115,14 @@
           "requested_permissions": [
             "refund.issue.routine"
           ],
-          "amount": 50,
+          "amount": 50.0,
           "unit": "USD",
           "effects": 1,
           "authority_context_id": "urn:cognous:authority-context:pilot-1",
           "authority_context_version": "0.1.0",
           "authority_context_status": "proposed_pending_governor_review",
           "requirement_id": "urn:cognous:authority-requirement:refund-routine-v1",
-          "requirement_commitment": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "requirement_commitment": "sha256:6590406e701b51e637c87953860d1ceb72d8da0af87311048f152e0ee2b8ccb6",
           "grant_id": "urn:cognous:grant:routine-1",
           "grant_revision": "1",
           "policy_versions": [
@@ -130,98 +132,99 @@
             }
           ],
           "role_mapping_version": "roles-v1",
-          "role_mapping_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+          "role_mapping_digest": "sha256:f8a8db156df7087ddf34be1ed77fc86fa20ba7668deb87a9b3a5bd0a6ace496d",
           "effective_max_effects": 1
         }
       }
     },
     {
-      "record_id": "cp:attempt:0",
+      "record_id": "control-plane-bounded-run@28350065:control_plane_attempt_transition:2",
       "producer_profile_id": "control-plane-bounded-run@28350065",
       "record_type": "control_plane_attempt_transition",
       "source_sequence": 2,
       "source_path": "attempts[0]",
-      "recorded_at": "2026-10-05T19:00:01+00:00",
+      "recorded_at": "2026-10-05T19:00:00+00:00",
       "identifiers": {
-        "run_id": "run-example",
-        "attempt_id": "cp-attempt-lost",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "decision_id": "decision-example"
+        "run_id": "run-1",
+        "attempt_id": "5bdc5f64-64ee-4dc4-8220-42f4f9ccb516",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "attempt_id": "cp-attempt-lost",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "decision_id": "decision-example",
-        "started_at": "2026-10-05T19:00:01+00:00",
+        "attempt_id": "5bdc5f64-64ee-4dc4-8220-42f4f9ccb516",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255",
+        "started_at": "2026-10-05T19:00:00+00:00",
         "status": "attempted",
         "acknowledgement": {},
         "error": null
       }
     },
     {
-      "record_id": "cp:attempt:1",
+      "record_id": "control-plane-bounded-run@28350065:control_plane_attempt_transition:3",
       "producer_profile_id": "control-plane-bounded-run@28350065",
       "record_type": "control_plane_attempt_transition",
       "source_sequence": 3,
       "source_path": "attempts[1]",
-      "recorded_at": "2026-10-05T19:00:01+00:00",
+      "recorded_at": "2026-10-05T19:00:00+00:00",
       "identifiers": {
-        "run_id": "run-example",
-        "attempt_id": "cp-attempt-lost",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "decision_id": "decision-example"
+        "run_id": "run-1",
+        "attempt_id": "5bdc5f64-64ee-4dc4-8220-42f4f9ccb516",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "attempt_id": "cp-attempt-lost",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "decision_id": "decision-example",
-        "started_at": "2026-10-05T19:00:01+00:00",
+        "attempt_id": "5bdc5f64-64ee-4dc4-8220-42f4f9ccb516",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255",
+        "started_at": "2026-10-05T19:00:00+00:00",
         "status": "unknown",
         "acknowledgement": {},
         "error": "synthetic acknowledgement unavailable after durable commit"
       }
     },
     {
-      "record_id": "cp:obs",
+      "record_id": "control-plane-bounded-run@28350065:effect_observation:4",
       "producer_profile_id": "control-plane-bounded-run@28350065",
       "record_type": "effect_observation",
       "source_sequence": 4,
       "source_path": "observations[0]",
-      "recorded_at": "2026-10-05T19:00:02+00:00",
+      "recorded_at": "2026-10-05T22:44:45.173537+00:00",
       "identifiers": {
-        "run_id": "run-example",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0"
+        "run_id": "run-1",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "observed_at": "2026-10-05T19:00:02+00:00",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "observed_at": "2026-10-05T22:44:45.173537+00:00",
         "state": "applied",
         "destination_state": {
-          "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
+          "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
           "grant_id": "urn:cognous:grant:routine-1",
           "target": "urn:cognous:synthetic-account:customer-001",
-          "amount": 50,
+          "amount": 50.0,
           "unit": "USD",
           "payload": {
             "customer_id": "customer-001",
             "refund_reason": "duplicate"
-          }
+          },
+          "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
         }
       }
     },
     {
-      "record_id": "molt:env",
+      "record_id": "moltbot-safe-envelope-0.2.0@6b0ba118:execution_envelope:5",
       "producer_profile_id": "moltbot-safe-envelope-0.2.0@6b0ba118",
       "record_type": "execution_envelope",
       "source_sequence": 5,
       "source_path": "moltbot.execution_envelope",
       "recorded_at": null,
       "identifiers": {
-        "decision_id": "decision-example",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
         "manifest_id": "refund-integration-pilot-v1",
         "action_id": "urn:cognous:action:refund-issue-routine-v1",
         "grant_id": "urn:cognous:grant:routine-1",
@@ -233,8 +236,8 @@
       "evidence_class": "producer_reported",
       "data": {
         "version": "0.2.0",
-        "decision_id": "decision-example",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
         "operation": {
           "actor": "urn:cognous:identity:refund-agent-1",
           "principal": "urn:cognous:principal:refund-service",
@@ -242,8 +245,8 @@
           "authority_domain": "customer-refunds",
           "manifest_id": "refund-integration-pilot-v1",
           "manifest_version": "1.1",
-          "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-          "proposal_commitment": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "manifest_digest": "sha256:4d1ad6c96bc242c63998231b4df3ad7c86dc2e5e59cdae63afe7bff86e60f6ac",
+          "proposal_commitment": "sha256:133c4baa21d85e41ae7f75af45a96810aa1a175ee3e693913585568630aea96b",
           "action_id": "urn:cognous:action:refund-issue-routine-v1",
           "adapter_id": "urn:cognous:adapter:synthetic-refund-v1",
           "target": "urn:cognous:synthetic-account:customer-001",
@@ -255,7 +258,7 @@
           "requested_permissions": [
             "refund.issue.routine"
           ],
-          "amount": 50,
+          "amount": 50.0,
           "unit": "USD",
           "effects": 1,
           "authority_context_id": "urn:cognous:alvorada:public-stack-profile:0.1.0",
@@ -268,117 +271,129 @@
       }
     },
     {
-      "record_id": "molt:result",
+      "record_id": "moltbot-safe-envelope-0.2.0@6b0ba118:execution_result:6",
       "producer_profile_id": "moltbot-safe-envelope-0.2.0@6b0ba118",
       "record_type": "execution_result",
       "source_sequence": 6,
       "source_path": "moltbot.execution_result",
       "recorded_at": null,
       "identifiers": {
-        "decision_id": "decision-example",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "attempt_id": "molt-attempt-lost"
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "attempt_id": "957f5358-27fa-47e2-9f54-a285981f7af7"
       },
       "evidence_class": "producer_reported",
       "data": {
         "status": "unknown",
-        "decision_id": "decision-example",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "attempt_id": "molt-attempt-lost",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "attempt_id": "957f5358-27fa-47e2-9f54-a285981f7af7",
         "attempted": true,
         "acknowledged": false,
         "observed_state": "applied",
         "newly_executed": true,
         "observation": {
-          "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-          "state": "applied"
+          "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+          "state": "applied",
+          "destination_state": {
+            "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+            "grant_id": "urn:cognous:grant:routine-1",
+            "target": "urn:cognous:synthetic-account:customer-001",
+            "amount": 50.0,
+            "unit": "USD",
+            "payload": {
+              "customer_id": "customer-001",
+              "refund_reason": "duplicate"
+            },
+            "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
+          }
         },
         "error": "synthetic acknowledgement unavailable after durable commit"
       }
     },
     {
-      "record_id": "molt:attempt",
+      "record_id": "moltbot-safe-envelope-0.2.0@6b0ba118:destination_attempt:7",
       "producer_profile_id": "moltbot-safe-envelope-0.2.0@6b0ba118",
       "record_type": "destination_attempt",
       "source_sequence": 7,
       "source_path": "moltbot.attempts[0]",
       "recorded_at": null,
       "identifiers": {
-        "attempt_id": "molt-attempt-lost",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "decision_id": "decision-example"
+        "attempt_id": "957f5358-27fa-47e2-9f54-a285981f7af7",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "attempt_id": "molt-attempt-lost",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "decision_id": "decision-example",
-        "operation_digest": "sha256:6d0773d67340b0f8d1bb305ef5d9df56a9944573be896b253a316fa7e4d7fed9",
-        "created_at": 1
+        "attempt_id": "957f5358-27fa-47e2-9f54-a285981f7af7",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255",
+        "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175",
+        "created_at": 1791240285.1690283
       }
     },
     {
-      "record_id": "molt:event:0",
+      "record_id": "moltbot-safe-envelope-0.2.0@6b0ba118:destination_attempt_event:8",
       "producer_profile_id": "moltbot-safe-envelope-0.2.0@6b0ba118",
       "record_type": "destination_attempt_event",
       "source_sequence": 8,
       "source_path": "moltbot.attempt_events[0]",
       "recorded_at": null,
       "identifiers": {
-        "attempt_id": "molt-attempt-lost",
+        "attempt_id": "957f5358-27fa-47e2-9f54-a285981f7af7",
         "event_id": "1",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "decision_id": "decision-example"
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255"
       },
       "evidence_class": "producer_reported",
       "data": {
         "event_id": 1,
-        "attempt_id": "molt-attempt-lost",
+        "attempt_id": "957f5358-27fa-47e2-9f54-a285981f7af7",
         "status": "attempted",
         "error": null,
-        "created_at": 1
+        "created_at": 1791240285.1697564
       }
     },
     {
-      "record_id": "molt:event:1",
+      "record_id": "moltbot-safe-envelope-0.2.0@6b0ba118:destination_attempt_event:9",
       "producer_profile_id": "moltbot-safe-envelope-0.2.0@6b0ba118",
       "record_type": "destination_attempt_event",
       "source_sequence": 9,
       "source_path": "moltbot.attempt_events[1]",
       "recorded_at": null,
       "identifiers": {
-        "attempt_id": "molt-attempt-lost",
+        "attempt_id": "957f5358-27fa-47e2-9f54-a285981f7af7",
         "event_id": "2",
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "decision_id": "decision-example"
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "ac8a973c-4db3-4963-b1ed-08c2d4770255"
       },
       "evidence_class": "producer_reported",
       "data": {
         "event_id": 2,
-        "attempt_id": "molt-attempt-lost",
+        "attempt_id": "957f5358-27fa-47e2-9f54-a285981f7af7",
         "status": "unknown",
         "error": "synthetic acknowledgement unavailable after durable commit",
-        "created_at": 2
+        "created_at": 1791240285.172165
       }
     },
     {
-      "record_id": "molt:effect",
+      "record_id": "moltbot-safe-envelope-0.2.0@6b0ba118:destination_effect:10",
       "producer_profile_id": "moltbot-safe-envelope-0.2.0@6b0ba118",
       "record_type": "destination_effect",
       "source_sequence": 10,
       "source_path": "moltbot.effects[0]",
       "recorded_at": null,
       "identifiers": {
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
         "grant_id": "urn:cognous:grant:routine-1"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
-        "operation_digest": "sha256:6d0773d67340b0f8d1bb305ef5d9df56a9944573be896b253a316fa7e4d7fed9",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175",
         "grant_id": "urn:cognous:grant:routine-1",
         "target": "urn:cognous:synthetic-account:customer-001",
-        "amount": 50,
+        "amount": 50.0,
         "unit": "USD",
         "payload_json": "{\"customer_id\":\"customer-001\",\"refund_reason\":\"duplicate\"}",
         "state": "applied"
@@ -392,27 +407,87 @@
       "value": "sha256:6b782ebbcc034edeca4069b31aa4d8cbc9d3eeaf3b2034ab989bb430de962c0e",
       "algorithm": "SHA-256",
       "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
-      "source_record_id": "cp:proposal",
+      "source_record_id": "control-plane-bounded-run@28350065:runtime_proposal:0",
       "source_path": "proposal.payload_commitment",
       "verification_status": "checked_match",
       "notes": null
     },
     {
       "label": "effect_id",
-      "value": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
+      "value": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
       "algorithm": "SHA-256",
       "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
-      "source_record_id": "cp:decision",
+      "source_record_id": "control-plane-bounded-run@28350065:runtime_decision:1",
       "source_path": "decisions[0].effect_id",
       "verification_status": "checked_match",
       "notes": "Checked under pinned Control Plane effect-id contract."
     },
     {
-      "label": "operation_digest",
-      "value": "sha256:6d0773d67340b0f8d1bb305ef5d9df56a9944573be896b253a316fa7e4d7fed9",
+      "label": "proposal_commitment",
+      "value": "sha256:133c4baa21d85e41ae7f75af45a96810aa1a175ee3e693913585568630aea96b",
       "algorithm": "SHA-256",
       "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
-      "source_record_id": "molt:effect",
+      "source_record_id": "control-plane-bounded-run@28350065:runtime_decision:1",
+      "source_path": "decisions[0].binding.proposal_commitment",
+      "verification_status": "attributed_claim",
+      "notes": null
+    },
+    {
+      "label": "manifest_digest",
+      "value": "sha256:4d1ad6c96bc242c63998231b4df3ad7c86dc2e5e59cdae63afe7bff86e60f6ac",
+      "algorithm": "SHA-256",
+      "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
+      "source_record_id": "control-plane-bounded-run@28350065:runtime_decision:1",
+      "source_path": "decisions[0].binding.manifest_digest",
+      "verification_status": "attributed_claim",
+      "notes": null
+    },
+    {
+      "label": "payload_commitment",
+      "value": "sha256:6b782ebbcc034edeca4069b31aa4d8cbc9d3eeaf3b2034ab989bb430de962c0e",
+      "algorithm": "SHA-256",
+      "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
+      "source_record_id": "control-plane-bounded-run@28350065:runtime_decision:1",
+      "source_path": "decisions[0].binding.payload_commitment",
+      "verification_status": "attributed_claim",
+      "notes": null
+    },
+    {
+      "label": "requirement_commitment",
+      "value": "sha256:6590406e701b51e637c87953860d1ceb72d8da0af87311048f152e0ee2b8ccb6",
+      "algorithm": "SHA-256",
+      "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
+      "source_record_id": "control-plane-bounded-run@28350065:runtime_decision:1",
+      "source_path": "decisions[0].binding.requirement_commitment",
+      "verification_status": "attributed_claim",
+      "notes": null
+    },
+    {
+      "label": "role_mapping_digest",
+      "value": "sha256:f8a8db156df7087ddf34be1ed77fc86fa20ba7668deb87a9b3a5bd0a6ace496d",
+      "algorithm": "SHA-256",
+      "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
+      "source_record_id": "control-plane-bounded-run@28350065:runtime_decision:1",
+      "source_path": "decisions[0].binding.role_mapping_digest",
+      "verification_status": "attributed_claim",
+      "notes": null
+    },
+    {
+      "label": "payload_commitment",
+      "value": "sha256:6b782ebbcc034edeca4069b31aa4d8cbc9d3eeaf3b2034ab989bb430de962c0e",
+      "algorithm": "SHA-256",
+      "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
+      "source_record_id": "moltbot-safe-envelope-0.2.0@6b0ba118:execution_envelope:5",
+      "source_path": "moltbot.execution_envelope.operation.payload_commitment",
+      "verification_status": "checked_match",
+      "notes": null
+    },
+    {
+      "label": "operation_digest",
+      "value": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175",
+      "algorithm": "SHA-256",
+      "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
+      "source_record_id": "moltbot-safe-envelope-0.2.0@6b0ba118:destination_effect:10",
       "source_path": "moltbot.effects[0].operation_digest",
       "verification_status": "checked_match",
       "notes": "Checked against the exact retained Execution Envelope operation under the pinned canonicalization profile."
@@ -464,15 +539,16 @@
     "external_effect_execution": false,
     "destination_observation": "producer_reported",
     "independent_effect_verification": false,
-    "notes": "Synthetic reconstruction example. Import does not renew permission or create an effect; local destination state is not independent institutional verification."
+    "notes": "Replay reconstructs recorded events only; import never renews permission or creates an effect."
   },
   "derivation": null,
   "integrity": [],
   "metadata": {
-    "fixture_provenance": "locally_generated_synthetic_example",
     "control_plane_revision": "283500652d47a692fb0b99a1172a6d5faffbd9a7",
     "moltbot_safe_revision": "6b0ba1185bcd390f71df947dda349415e4105f5f",
     "manifest_revision": "46c950bed37fe3812000895430bc0312d29e37ce",
-    "alvorada_revision": "fb3d97938969a89e149e8ff8db2756091d1233fc"
+    "alvorada_revision": "fb3d97938969a89e149e8ff8db2756091d1233fc",
+    "fixture_provenance": "generated_from_actual_pinned_producer_run",
+    "scenario": "lost_ack"
   }
 }
