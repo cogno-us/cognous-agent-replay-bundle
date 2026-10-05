@@ -82,7 +82,11 @@ def _validate_proposal_binding(proposal: dict[str, Any], binding: dict[str, Any]
         "requested_permissions", "amount", "unit", "effects", "requirement_id",
     )
     for field in fields:
-        _require_equal(binding.get(field), proposal.get(field), path + "." + field)
+        actual = binding.get(field)
+        expected = proposal.get(field)
+        if field == "requested_permissions" and isinstance(actual, (list, tuple)) and isinstance(expected, (list, tuple)):
+            actual, expected = list(actual), list(expected)
+        _require_equal(actual, expected, path + "." + field)
 
 
 def _validate_envelope_chain(
