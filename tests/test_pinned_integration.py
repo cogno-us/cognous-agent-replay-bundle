@@ -91,6 +91,40 @@ def test_actual_pinned_success_import_is_non_effecting(tmp_path):
     assert bundle.metadata["alvorada_revision"] == ALVORADA_REVISION
 
 
+
+def test_actual_pinned_decision_hold_has_no_effect(tmp_path):
+    h = _load_actual_pinned_moltbot_helpers()
+    helper = h._load_pinned_helpers()
+    proposal = helper.proposal()
+    resolver = helper.resolver_for(proposal)
+    grant = resolver.contexts[helper.PROFILE]["grant"]
+    resolver.statuses[grant["grant_id"]].status = "revoked"
+    destination = helper.LocalRefundDestination(tmp_path / "cp-destination.json")
+    records = helper.BoundedRecordStore(tmp_path / "cp-run.json", "run-1")
+    workflow = helper.BoundedAuthorizationWorkflow(
+        manifest=helper.manifest(),
+        resolver=resolver,
+        destination=destination,
+        records=records,
+    )
+
+    decision = workflow.decide(proposal, now=helper.NOW)
+    assert decision.result == "hold"
+    assert "grant_not_active" in decision.reasons
+    assert destination.snapshot()["effects"] == {}
+
+    bundle = import_bounded_workflow(
+        workflow.records.load().model_dump(mode="json"),
+        proposal=proposal.model_dump(mode="json", exclude_none=False),
+    )
+    assert bundle.semantics.external_effect_execution is False
+    assert destination.snapshot()["effects"] == {}
+    assert any(
+        record.record_type == "runtime_decision" and record.data["result"] == "hold"
+        for record in bundle.records
+    )
+
+
 def test_actual_pinned_denied_revalidation_has_no_effect(tmp_path):
     h = _load_actual_pinned_moltbot_helpers()
     helper, proposal, resolver, workflow, decision, destination, executor, request = h._integrated(tmp_path)
