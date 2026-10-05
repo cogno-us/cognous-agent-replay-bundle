@@ -177,7 +177,7 @@ def moltbot_source(cp):
         "manifest_id": "m1",
         "manifest_version": "1.1",
         "manifest_digest": "sha256:" + "2" * 64,
-        "proposal_commitment": "sha256:" + "1" * 64,
+        "proposal_commitment": cp["decisions"][0]["binding"]["proposal_commitment"],
         "action_id": "refund.issue",
         "adapter_id": "adapter",
         "target": "target",
