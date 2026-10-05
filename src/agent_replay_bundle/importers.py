@@ -289,12 +289,21 @@ def import_bounded_workflow(
                         verification_status="attributed_claim",
                     ))
 
+    decision_effects = {did: raw.get("effect_id") for did, raw in decisions.items()}
+    known_effects = {value for value in decision_effects.values() if isinstance(value, str)}
+
     attempt_invariants: dict[str, dict[str, Any]] = {}
     for i, raw in enumerate(cp["attempts"]):
         raw = _obj(raw, f"attempts[{i}]")
         aid = raw.get("attempt_id")
         if not isinstance(aid, str) or not aid:
             raise ImportContractError(f"attempts[{i}].attempt_id required")
+        did = raw.get("decision_id")
+        eid = raw.get("effect_id")
+        if did not in decision_effects:
+            raise ImportContractError(f"attempts[{i}] has dangling decision_id {did}")
+        if decision_effects[did] != eid:
+            raise ImportContractError(f"attempts[{i}] effect_id does not match its decision")
         invariant = {k: raw.get(k) for k in ("attempt_id", "effect_id", "decision_id", "started_at")}
         _unique_or_same(attempt_invariants, aid, invariant, "attempt_id")
         records.append(_record(
@@ -311,6 +320,9 @@ def import_bounded_workflow(
     ):
         for i, raw in enumerate(cp[field]):
             raw = _obj(raw, f"{field}[{i}]")
+            eid = raw.get("effect_id")
+            if eid not in known_effects:
+                raise ImportContractError(f"{field}[{i}] has dangling effect_id {eid}")
             records.append(_record(
                 BOUNDED_PROFILE, kind, seq, f"{field}[{i}]", raw,
                 ids={"run_id": run_id, "effect_id": raw.get("effect_id")},
@@ -407,6 +419,18 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
         raise ImportContractError("unsupported Moltbot ExecutionEnvelope version")
     op = _obj(envelope.get("operation"), "execution_envelope.operation")
 
+    cp_decisions = {
+        r.identifiers.get("decision_id"): r.identifiers.get("effect_id")
+        for r in cp_records if r.record_type == "runtime_decision"
+    }
+    envelope_decision = envelope.get("decision_id")
+    envelope_effect = envelope.get("effect_id")
+    if envelope_decision not in cp_decisions:
+        raise ImportContractError(f"Moltbot envelope has dangling decision_id {envelope_decision}")
+    if cp_decisions[envelope_decision] != envelope_effect:
+        raise ImportContractError("Moltbot envelope effect_id does not match Control Plane decision")
+    expected_operation_digest = _sha256(op)
+
     records: list[SourceRecord] = []
     links: list[RecordLink] = []
     commitments: list[CommitmentRecord] = []
@@ -437,6 +461,8 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
         ))
 
     result = _obj(source["execution_result"], "execution_result")
+    if result.get("decision_id") != envelope_decision or result.get("effect_id") != envelope_effect:
+        raise ImportContractError("Moltbot execution_result identifiers do not match execution envelope")
     records.append(_record(
         MOLTBOT_PROFILE, "execution_result", seq, "moltbot.execution_result", result,
         ids={"decision_id": result.get("decision_id"), "effect_id": result.get("effect_id"),
@@ -449,6 +475,11 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
         aid = raw.get("attempt_id")
         if not isinstance(aid, str) or not aid:
             raise ImportContractError("Moltbot attempt missing attempt_id")
+        if raw.get("decision_id") != envelope_decision or raw.get("effect_id") != envelope_effect:
+            raise ImportContractError(f"Moltbot attempt {aid} does not match execution envelope")
+        digest = raw.get("operation_digest")
+        if digest not in (expected_operation_digest, "legacy:unknown"):
+            raise ImportContractError(f"Moltbot attempt {aid} operation_digest mismatch")
         _unique_or_same(attempts, aid, raw, "Moltbot attempt_id")
         records.append(_record(
             MOLTBOT_PROFILE, "destination_attempt", seq, f"moltbot.attempts[{i}]", raw,
@@ -474,6 +505,10 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
             raise ImportContractError("Moltbot effect missing effect_id")
         invariant = {k: raw.get(k) for k in
                      ("effect_id", "operation_digest", "grant_id", "target", "amount", "unit", "payload_json")}
+        if eid != envelope_effect:
+            raise ImportContractError("Moltbot effect_id does not match execution envelope")
+        if raw.get("operation_digest") != expected_operation_digest:
+            raise ImportContractError("Moltbot effect operation_digest mismatch")
         _unique_or_same(effects, eid, invariant, "effect_id")
         rr = _record(
             MOLTBOT_PROFILE, "destination_effect", seq, f"moltbot.effects[{i}]", raw,
@@ -486,8 +521,8 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
                 label="operation_digest", value=digest, algorithm="SHA-256",
                 canonicalization_profile=CANONICAL_JSON_PROFILE,
                 source_record_id=rr.record_id, source_path=f"moltbot.effects[{i}].operation_digest",
-                verification_status="attributed_claim",
-                notes="Producer-stored digest; original operation remains separately retained.",
+                verification_status="checked_match",
+                notes="Checked against the exact retained Execution Envelope operation under the pinned canonicalization profile.",
             ))
 
     cp_attempts = [r for r in cp_records if r.record_type == "control_plane_attempt_transition"]
