@@ -64,6 +64,84 @@ def _unique_or_same(seen: dict[str, dict[str, Any]], key: str, value: dict[str, 
         raise ImportContractError(f"conflicting content under immutable {label} {key}")
 
 
+def _require_equal(actual: Any, expected: Any, path: str) -> None:
+    if actual != expected:
+        raise ImportContractError(f"{path} conflicts with committed operation")
+
+
+def _proposal_commitment(proposal: dict[str, Any]) -> str:
+    return _sha256(proposal)
+
+
+def _validate_proposal_binding(proposal: dict[str, Any], binding: dict[str, Any], path: str) -> None:
+    expected_commitment = _proposal_commitment(proposal)
+    _require_equal(binding.get("proposal_commitment"), expected_commitment, path + ".proposal_commitment")
+    fields = (
+        "manifest_id", "manifest_version", "manifest_digest", "actor", "principal",
+        "action_id", "adapter_id", "target", "payload_commitment",
+        "requested_permissions", "amount", "unit", "effects", "requirement_id",
+    )
+    for field in fields:
+        actual = binding.get(field)
+        expected = proposal.get(field)
+        if field == "requested_permissions" and isinstance(actual, (list, tuple)) and isinstance(expected, (list, tuple)):
+            actual, expected = list(actual), list(expected)
+        _require_equal(actual, expected, path + "." + field)
+
+
+def _validate_envelope_chain(
+    op: dict[str, Any], proposal: dict[str, Any], binding: dict[str, Any]
+) -> None:
+    proposal_fields = (
+        "actor", "principal", "manifest_id", "manifest_version", "manifest_digest",
+        "action_id", "adapter_id", "target", "payload", "payload_commitment",
+        "requested_permissions", "amount", "unit", "effects", "requirement_id",
+    )
+    for field in proposal_fields:
+        actual = op.get(field)
+        expected = proposal.get(field)
+        if field == "requested_permissions" and isinstance(actual, (list, tuple)) and isinstance(expected, (list, tuple)):
+            actual, expected = list(actual), list(expected)
+        _require_equal(actual, expected, "execution_envelope.operation." + field)
+    _require_equal(
+        op.get("authority_context_id"), proposal.get("authority_context_ref"),
+        "execution_envelope.operation.authority_context_id(profile_ref)",
+    )
+    _require_equal(
+        op.get("proposal_commitment"), _proposal_commitment(proposal),
+        "execution_envelope.operation.proposal_commitment",
+    )
+    for field in ("grant_id", "grant_revision", "effective_max_effects"):
+        _require_equal(op.get(field), binding.get(field), "execution_envelope.operation." + field)
+
+
+def _decode_payload_json(value: Any, path: str) -> dict[str, Any]:
+    if not isinstance(value, str):
+        raise ImportContractError(f"{path} must be canonical JSON text")
+    try:
+        decoded = __import__("json").loads(value)
+    except (TypeError, ValueError) as exc:
+        raise ImportContractError(f"{path} is invalid JSON") from exc
+    if not isinstance(decoded, dict):
+        raise ImportContractError(f"{path} must decode to an object")
+    return decoded
+
+
+def _validate_observation_content(observation: dict[str, Any], effect_id: str, op: dict[str, Any], path: str) -> None:
+    _require_equal(observation.get("effect_id"), effect_id, path + ".effect_id")
+    state = observation.get("state")
+    destination = observation.get("destination_state")
+    if state in {"applied", "partial"}:
+        if not isinstance(destination, dict):
+            raise ImportContractError(f"{path}.destination_state must be an object")
+        for field in ("effect_id", "grant_id", "target", "amount", "unit"):
+            expected = effect_id if field == "effect_id" else op.get(field)
+            _require_equal(destination.get(field), expected, path + ".destination_state." + field)
+        _require_equal(destination.get("payload"), op.get("payload"), path + ".destination_state.payload")
+        if "operation_digest" in destination:
+            _require_equal(destination.get("operation_digest"), _sha256(op), path + ".destination_state.operation_digest")
+
+
 def import_legacy_control_plane_replay(source: dict[str, Any]) -> ReconstructionBundle:
     """Import the legacy ReplayBundle at the pinned Control Plane revision.
 
@@ -238,6 +316,7 @@ def import_bounded_workflow(
         ))
 
     decisions: dict[str, dict[str, Any]] = {}
+    bound_decision_ids: list[str] = []
     for i, raw in enumerate(cp["decisions"]):
         raw = _obj(raw, f"decisions[{i}]")
         did = raw.get("decision_id")
@@ -260,6 +339,9 @@ def import_bounded_workflow(
         records.append(rec)
         seq += 1
         if isinstance(binding, dict):
+            bound_decision_ids.append(did)
+            if proposal is not None:
+                _validate_proposal_binding(p, binding, f"decisions[{i}].binding")
             effect_id = raw.get("effect_id")
             expected = _sha256({
                 "proposal": binding.get("proposal_commitment"),
@@ -288,6 +370,18 @@ def import_bounded_workflow(
                         source_path=f"decisions[{i}].binding.{label}",
                         verification_status="attributed_claim",
                     ))
+
+    if proposal is not None and len(bound_decision_ids) > 1:
+        raise ImportContractError(
+            "single-proposal importer does not support multiple authorization bindings"
+        )
+    if proposal is not None and not bound_decision_ids:
+        report.complete = False
+        report.findings.append(ImportFinding(
+            code="B005", category="missing_dependency", severity="warning",
+            path="decisions", message="Supplied proposal did not resolve to an authorization binding.",
+            value_state="unavailable",
+        ))
 
     decision_effects = {did: raw.get("effect_id") for did, raw in decisions.items()}
     known_effects = {value for value in decision_effects.values() if isinstance(value, str)}
@@ -323,6 +417,14 @@ def import_bounded_workflow(
             eid = raw.get("effect_id")
             if eid not in known_effects:
                 raise ImportContractError(f"{field}[{i}] has dangling effect_id {eid}")
+            if field == "reconciliations":
+                embedded = _obj(raw.get("observation"), f"{field}[{i}].observation")
+                if embedded.get("effect_id") != eid:
+                    raise ImportContractError(f"{field}[{i}].observation.effect_id conflicts with enclosing effect_id")
+                if raw.get("result") == "applied" and embedded.get("state") != "applied":
+                    raise ImportContractError(f"{field}[{i}] applied result conflicts with embedded observation")
+                if raw.get("result") == "safe_to_retry" and embedded.get("state") != "absent":
+                    raise ImportContractError(f"{field}[{i}] safe_to_retry conflicts with embedded observation")
             records.append(_record(
                 BOUNDED_PROFILE, kind, seq, f"{field}[{i}]", raw,
                 ids={"run_id": run_id, "effect_id": raw.get("effect_id")},
@@ -355,7 +457,9 @@ def import_bounded_workflow(
     )]
 
     if moltbot_export is not None:
-        mr, ml, mc, mf = _import_moltbot(moltbot_export, seq, records)
+        mr, ml, mc, mf = _import_moltbot(
+            moltbot_export, seq, records, proposal=p if proposal is not None else None
+        )
         records.extend(mr); links.extend(ml); commitments.extend(mc); report.findings.extend(mf)
         profiles.append(ProducerProfile(
             profile_id=MOLTBOT_PROFILE,
@@ -407,7 +511,10 @@ def import_bounded_workflow(
     )
 
 
-def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRecord]):
+def _import_moltbot(
+    source: dict[str, Any], seq: int, cp_records: list[SourceRecord],
+    *, proposal: dict[str, Any] | None,
+):
     source = _obj(source, "moltbot_export")
     required = {"execution_envelope", "execution_result", "effects", "attempts", "attempt_events"}
     missing = sorted(required - set(source))
@@ -419,9 +526,13 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
         raise ImportContractError("unsupported Moltbot ExecutionEnvelope version")
     op = _obj(envelope.get("operation"), "execution_envelope.operation")
 
-    cp_decisions = {
-        r.identifiers.get("decision_id"): r.identifiers.get("effect_id")
+    cp_decision_records = {
+        r.identifiers.get("decision_id"): r
         for r in cp_records if r.record_type == "runtime_decision"
+    }
+    cp_decisions = {
+        did: record.identifiers.get("effect_id")
+        for did, record in cp_decision_records.items()
     }
     envelope_decision = envelope.get("decision_id")
     envelope_effect = envelope.get("effect_id")
@@ -429,6 +540,14 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
         raise ImportContractError(f"Moltbot envelope has dangling decision_id {envelope_decision}")
     if cp_decisions[envelope_decision] != envelope_effect:
         raise ImportContractError("Moltbot envelope effect_id does not match Control Plane decision")
+    decision_record = cp_decision_records[envelope_decision]
+    binding = decision_record.data.get("binding")
+    if not isinstance(binding, dict):
+        raise ImportContractError("Moltbot envelope cannot bind to a Control Plane decision without authorization binding")
+    if proposal is None:
+        raise ImportContractError("Moltbot envelope requires the corresponding RuntimeProposal for cross-record validation")
+    _validate_proposal_binding(proposal, binding, "decision.binding")
+    _validate_envelope_chain(op, proposal, binding)
     expected_operation_digest = _sha256(op)
 
     records: list[SourceRecord] = []
@@ -463,6 +582,15 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
     result = _obj(source["execution_result"], "execution_result")
     if result.get("decision_id") != envelope_decision or result.get("effect_id") != envelope_effect:
         raise ImportContractError("Moltbot execution_result identifiers do not match execution envelope")
+    result_observation = result.get("observation")
+    if isinstance(result_observation, dict) and result_observation:
+        _require_equal(result_observation.get("effect_id"), envelope_effect, "execution_result.observation.effect_id")
+        if "state" in result_observation and result.get("observed_state") not in (None, "unknown"):
+            _require_equal(result_observation.get("state"), result.get("observed_state"), "execution_result.observation.state")
+        if "destination_state" in result_observation:
+            _validate_observation_content(
+                result_observation, envelope_effect, op, "execution_result.observation"
+            )
     records.append(_record(
         MOLTBOT_PROFILE, "execution_result", seq, "moltbot.execution_result", result,
         ids={"decision_id": result.get("decision_id"), "effect_id": result.get("effect_id"),
@@ -497,6 +625,23 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
                  "effect_id": attempts[aid].get("effect_id"), "decision_id": attempts[aid].get("decision_id")},
         )); seq += 1
 
+    result_attempt_id = result.get("attempt_id")
+    if result_attempt_id is not None:
+        if not isinstance(result_attempt_id, str) or not result_attempt_id:
+            raise ImportContractError("execution_result.attempt_id must be a non-empty string when supplied")
+        moltbot_ids = set(attempts)
+        cp_attempt_ids = {
+            r.identifiers.get("attempt_id")
+            for r in cp_records if r.record_type == "control_plane_attempt_transition"
+        }
+        if result_attempt_id not in moltbot_ids and result_attempt_id not in cp_attempt_ids:
+            raise ImportContractError(f"execution_result has dangling attempt_id {result_attempt_id}")
+        if result_attempt_id in cp_attempt_ids and result_attempt_id not in moltbot_ids:
+            if result.get("status") not in {"reconciled", "partial", "unknown"} or result.get("newly_executed") is not False:
+                raise ImportContractError(
+                    "Control Plane attempt namespace is valid only for non-new reconciliation results"
+                )
+
     effects: dict[str, dict[str, Any]] = {}
     for i, raw in enumerate(source["effects"]):
         raw = _obj(raw, f"moltbot.effects[{i}]")
@@ -509,6 +654,14 @@ def _import_moltbot(source: dict[str, Any], seq: int, cp_records: list[SourceRec
             raise ImportContractError("Moltbot effect_id does not match execution envelope")
         if raw.get("operation_digest") != expected_operation_digest:
             raise ImportContractError("Moltbot effect operation_digest mismatch")
+        _require_equal(raw.get("grant_id"), op.get("grant_id"), f"moltbot.effects[{i}].grant_id")
+        _require_equal(raw.get("target"), op.get("target"), f"moltbot.effects[{i}].target")
+        _require_equal(raw.get("amount"), op.get("amount"), f"moltbot.effects[{i}].amount")
+        _require_equal(raw.get("unit"), op.get("unit"), f"moltbot.effects[{i}].unit")
+        _require_equal(
+            _decode_payload_json(raw.get("payload_json"), f"moltbot.effects[{i}].payload_json"),
+            op.get("payload"), f"moltbot.effects[{i}].payload_json",
+        )
         _unique_or_same(effects, eid, invariant, "effect_id")
         rr = _record(
             MOLTBOT_PROFILE, "destination_effect", seq, f"moltbot.effects[{i}]", raw,

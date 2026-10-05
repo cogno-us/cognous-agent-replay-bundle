@@ -52,7 +52,7 @@ def legacy_source():
 
 def _binding():
     return {
-        "proposal_commitment": "sha256:" + "1" * 64,
+        "proposal_commitment": "placeholder",
         "manifest_id": "m1",
         "manifest_version": "1.1",
         "manifest_digest": "sha256:" + "2" * 64,
@@ -91,7 +91,11 @@ def _effect_id(binding):
 
 
 def bounded_source():
+    from agent_replay_bundle.importers import _sha256
+
     binding = _binding()
+    binding["proposal_commitment"] = _sha256(proposal_source())
+    binding["payload_commitment"] = proposal_source()["payload_commitment"]
     effect_id = _effect_id(binding)
     return {
         "run_id": "run-1",
@@ -173,7 +177,7 @@ def moltbot_source(cp):
         "manifest_id": "m1",
         "manifest_version": "1.1",
         "manifest_digest": "sha256:" + "2" * 64,
-        "proposal_commitment": "sha256:" + "1" * 64,
+        "proposal_commitment": cp["decisions"][0]["binding"]["proposal_commitment"],
         "action_id": "refund.issue",
         "adapter_id": "adapter",
         "target": "target",
@@ -290,7 +294,7 @@ def test_conflicting_immutable_effect_content_is_rejected():
     second = copy.deepcopy(m["effects"][0])
     second["target"] = "different"
     m["effects"].append(second)
-    with pytest.raises(ImportContractError, match="conflicting content"):
+    with pytest.raises(ImportContractError, match="target conflicts|conflicting content"):
         import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
 
 
@@ -377,3 +381,110 @@ def test_redaction_creates_new_derivative_identity_and_drops_stale_hmac():
     assert any(i.kind == "content-digest" for i in redacted.integrity)
     assert verify_reconstruction_hmac(redacted, "secret") is False
     assert any(f.value_state == "redacted" for f in redacted.import_reports[0].findings)
+
+
+def test_governor_regression_proposal_actor_mismatch_is_rejected():
+    cp = bounded_source()
+    p = proposal_source()
+    p["actor"] = "urn:attacker"
+    with pytest.raises(ImportContractError, match="proposal_commitment|actor"):
+        import_bounded_workflow(cp, proposal=p, moltbot_export=moltbot_source(cp))
+
+
+def test_governor_regression_destination_amount_mismatch_is_rejected():
+    cp = bounded_source()
+    m = moltbot_source(cp)
+    m["effects"][0]["amount"] = 999999
+    with pytest.raises(ImportContractError, match="amount conflicts"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
+
+
+def test_governor_regression_dangling_execution_result_attempt_is_rejected():
+    cp = bounded_source()
+    m = moltbot_source(cp)
+    m["execution_result"]["attempt_id"] = "nonexistent-attempt"
+    with pytest.raises(ImportContractError, match="dangling attempt_id"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
+
+
+def test_governor_regression_recomputed_attacker_envelope_still_conflicts_with_decision():
+    from agent_replay_bundle.importers import _sha256
+
+    cp = bounded_source()
+    m = moltbot_source(cp)
+    m["execution_envelope"]["operation"]["target"] = "urn:attacker"
+    digest = _sha256(m["execution_envelope"]["operation"])
+    m["attempts"][0]["operation_digest"] = digest
+    m["effects"][0]["operation_digest"] = digest
+    m["effects"][0]["target"] = "urn:attacker"
+    with pytest.raises(ImportContractError, match="target conflicts"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
+
+
+def test_governor_regression_hmac_subject_substitution_fails():
+    bundle = import_bounded_workflow(bounded_source(), proposal=proposal_source())
+    signed = sign_reconstruction_bundle(bundle, "secret", key_id="test-key")
+    hmac_metadata = next(i for i in signed.integrity if i.kind == "hmac")
+    hmac_metadata.subject_bundle_id = "different-bundle"
+    assert verify_reconstruction_hmac(signed, "secret") is False
+
+
+def test_hmac_algorithm_profile_key_label_and_claim_substitution_fail():
+    bundle = import_bounded_workflow(bounded_source(), proposal=proposal_source())
+    for field, value in (
+        ("canonicalization_profile", "other-profile"),
+        ("key_id", "substituted-key-label"),
+        ("verification_claim", "different claim"),
+    ):
+        signed = sign_reconstruction_bundle(bundle, "secret", key_id="test-key")
+        setattr(next(i for i in signed.integrity if i.kind == "hmac"), field, value)
+        assert verify_reconstruction_hmac(signed, "secret") is False
+
+
+def test_destination_payload_mismatch_is_rejected_even_with_matching_digest():
+    cp = bounded_source()
+    m = moltbot_source(cp)
+    m["effects"][0]["payload_json"] = '{"customer_id":"attacker"}'
+    with pytest.raises(ImportContractError, match="payload_json conflicts"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
+
+
+def test_execution_result_embedded_observation_effect_mismatch_is_rejected():
+    cp = bounded_source()
+    m = moltbot_source(cp)
+    m["execution_result"]["observation"]["effect_id"] = "different"
+    with pytest.raises(ImportContractError, match="observation.effect_id"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
+
+
+def test_reconciliation_embedded_observation_mismatch_is_rejected():
+    cp = bounded_source()
+    eid = cp["decisions"][0]["effect_id"]
+    cp["reconciliations"] = [{
+        "effect_id": eid,
+        "reconciled_at": "2026-10-05T00:00:03Z",
+        "result": "applied",
+        "observation": {
+            "effect_id": "different",
+            "observed_at": "2026-10-05T00:00:03Z",
+            "state": "applied",
+            "destination_state": {},
+        },
+    }]
+    with pytest.raises(ImportContractError, match="observation.effect_id"):
+        import_bounded_workflow(cp, proposal=proposal_source())
+
+
+def test_multiple_bound_decisions_rejected_by_single_proposal_importer():
+    cp = bounded_source()
+    second = copy.deepcopy(cp["decisions"][0])
+    second["decision_id"] = "decision-2"
+    cp["decisions"].append(second)
+    with pytest.raises(ImportContractError, match="multiple authorization bindings"):
+        import_bounded_workflow(cp, proposal=proposal_source())
+
+
+def test_missing_proposal_with_moltbot_evidence_is_rejected_not_promoted_complete():
+    cp = bounded_source()
+    with pytest.raises(ImportContractError, match="requires the corresponding RuntimeProposal"):
+        import_bounded_workflow(cp, moltbot_export=moltbot_source(cp))

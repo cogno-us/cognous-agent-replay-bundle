@@ -19,6 +19,11 @@ from pydantic import BaseModel, Field
 
 RECONSTRUCTION_BUNDLE_VERSION = "0.2.0"
 CANONICAL_JSON_PROFILE = "json-sort-keys-compact-utf8-no-nan"
+HMAC_VERIFICATION_CLAIM = (
+    "Verifiable only by a party holding the shared secret; metadata is "
+    "authenticated as bundle data, but key_id does not establish public key "
+    "identity, issuer identity, or production key custody."
+)
 
 
 def _now_iso() -> str:
@@ -142,7 +147,9 @@ class ReconstructionBundle(BaseModel):
     bundle_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     bundle_version: Literal["0.2.0"] = RECONSTRUCTION_BUNDLE_VERSION
     run_id: str | None = None
-    status: Literal["reconstruction_complete", "reconstruction_partial", "incomplete", "redacted"] = "incomplete"
+    status: Literal[
+        "reconstruction_complete", "reconstruction_partial", "incomplete", "redacted"
+    ] = "incomplete"
     generated_at: str = Field(default_factory=_now_iso)
     producer_profiles: list[ProducerProfile] = Field(default_factory=list)
     records: list[SourceRecord] = Field(default_factory=list)
@@ -155,14 +162,29 @@ class ReconstructionBundle(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-def _integrity_payload(bundle: ReconstructionBundle) -> dict[str, Any]:
+def _content_payload(bundle: ReconstructionBundle) -> dict[str, Any]:
+    """Canonical content-digest payload; integrity metadata is excluded."""
     payload = bundle.model_dump(mode="json")
     payload["integrity"] = []
     return payload
 
 
+def _hmac_payload(bundle: ReconstructionBundle) -> dict[str, Any]:
+    """Canonical HMAC payload with only HMAC signature values blanked.
+
+    All other integrity metadata is authenticated, including subject bundle,
+    algorithm, canonicalization profile, key_id label and verification claim.
+    key_id remains only an authenticated caller-supplied label.
+    """
+    payload = bundle.model_dump(mode="json")
+    for item in payload.get("integrity", []):
+        if item.get("kind") == "hmac":
+            item["value"] = ""
+    return payload
+
+
 def content_digest(bundle: ReconstructionBundle) -> IntegrityMetadata:
-    digest = hashlib.sha256(canonical_bytes(_integrity_payload(bundle))).hexdigest()
+    digest = hashlib.sha256(canonical_bytes(_content_payload(bundle))).hexdigest()
     return IntegrityMetadata(
         kind="content-digest",
         algorithm="SHA-256",
@@ -178,29 +200,27 @@ def content_digest(bundle: ReconstructionBundle) -> IntegrityMetadata:
 def sign_reconstruction_bundle(
     bundle: ReconstructionBundle, secret: str, *, key_id: str | None = None
 ) -> ReconstructionBundle:
-    """Return a copy with HMAC export integrity metadata.
-
-    Anyone verifying this HMAC must possess the same shared secret. The result
-    is therefore not a publicly verifiable issuer signature.
-    """
+    """Return a copy with metadata-bound HMAC export integrity."""
     result = bundle.model_copy(deep=True)
-    payload = canonical_bytes(_integrity_payload(result))
-    signature = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
     result.integrity = [
         item for item in result.integrity if item.kind != "hmac"
     ] + [
         IntegrityMetadata(
             kind="hmac",
             algorithm="HMAC-SHA256",
-            value=signature,
+            canonicalization_profile=CANONICAL_JSON_PROFILE,
+            value="",
             subject_bundle_id=result.bundle_id,
             key_id=key_id,
-            verification_claim=(
-                "Verifiable only by a party holding the shared secret; no public "
-                "issuer identity or production key custody is established."
-            ),
+            verification_claim=HMAC_VERIFICATION_CLAIM,
         )
     ]
+    signature = hmac.new(
+        secret.encode("utf-8"),
+        canonical_bytes(_hmac_payload(result)),
+        hashlib.sha256,
+    ).hexdigest()
+    result.integrity[-1].value = signature
     return result
 
 
@@ -208,12 +228,21 @@ def verify_reconstruction_hmac(bundle: ReconstructionBundle, secret: str) -> boo
     signatures = [item for item in bundle.integrity if item.kind == "hmac"]
     if len(signatures) != 1:
         return False
+    signature = signatures[0]
+    if signature.algorithm != "HMAC-SHA256":
+        return False
+    if signature.canonicalization_profile != CANONICAL_JSON_PROFILE:
+        return False
+    if signature.subject_bundle_id != bundle.bundle_id:
+        return False
+    if signature.verification_claim != HMAC_VERIFICATION_CLAIM:
+        return False
     expected = hmac.new(
         secret.encode("utf-8"),
-        canonical_bytes(_integrity_payload(bundle)),
+        canonical_bytes(_hmac_payload(bundle)),
         hashlib.sha256,
     ).hexdigest()
-    return hmac.compare_digest(signatures[0].value, expected)
+    return hmac.compare_digest(signature.value, expected)
 
 
 def redact_reconstruction_bundle(

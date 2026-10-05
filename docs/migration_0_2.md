@@ -75,3 +75,17 @@ derivative.
 A different producer commit or an unknown Execution Envelope version requires a
 new or reviewed adapter profile. Do not bypass the check by changing a version
 string or relying on similar fields.
+
+
+## Integrity compatibility note
+
+HMAC exports produced before the cross-record validation hardening excluded the
+entire `integrity` array from the MAC input. Current HMAC verification binds
+the integrity metadata and blanks only the HMAC value itself. Older
+reconstruction HMACs therefore require explicit legacy handling outside the
+current verifier or must be re-signed from trusted source content.
+
+A `key_id` in current metadata is an authenticated caller-supplied label, not
+proof of key identity or custody. Redacted derivatives still discard source
+integrity metadata, receive a new bundle identity and must be signed again if
+shared-secret authentication is required.

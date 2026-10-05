@@ -75,6 +75,23 @@ jobs:
           ARB_PINNED_MANIFEST_FIXTURE: ${{ github.workspace }}/pinned/manifest/examples/refund_integration_v1_1.manifest.json
         run: pytest -ra
 
+      - name: Generate pinned reconstruction examples
+        if: matrix.python-version == '3.12'
+        working-directory: replay-bundle
+        env:
+          ARB_PINNED_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane
+          ARB_PINNED_MOLTBOT_ROOT: ${{ github.workspace }}/pinned/moltbot-safe
+          ARB_PINNED_MANIFEST_FIXTURE: ${{ github.workspace }}/pinned/manifest/examples/refund_integration_v1_1.manifest.json
+        run: python scripts/generate_reconstruction_examples.py --output-dir generated-examples
+
+      - name: Upload pinned reconstruction examples
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: reconstruction-examples-${{ github.sha }}
+          path: replay-bundle/generated-examples/*.json
+          if-no-files-found: error
+
       - name: Check examples
         working-directory: replay-bundle
         run: arb check-examples
