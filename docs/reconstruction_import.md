@@ -113,19 +113,47 @@ revision, including:
 - Control Plane effect identity from proposal commitment + grant ID + grant
   revision.
 
+The bounded importer validates the supplied evidence as one cross-record chain:
+the full RuntimeProposal commitment must equal the decision binding; applicable
+proposal fields must equal the binding; the Execution Envelope operation must
+equal the proposal and grant/effect-limit binding; and durable destination rows
+must equal the committed operation for grant, target, amount, unit and decoded
+payload. A copied operation digest is insufficient when the row content differs.
+
+Execution-result attempt IDs are namespace-aware. Ordinary destination
+execution resolves to a Moltbot attempt row. The pinned reconciliation path may
+return a Control Plane attempt ID when no new destination attempt is created.
+Dangling IDs and incompatible namespace/status combinations are rejected; the
+two namespaces are never treated as identity-equivalent.
+
+This adapter accepts one supplied RuntimeProposal/Execution Envelope operation.
+Multiple authorization bindings are rejected rather than forced onto that
+proposal. Missing optional evidence can make reconstruction explicitly partial;
+contradictory supplied evidence is a contract error.
+
 Other source-provided digests are retained as attributed producer claims unless
 a documented verification profile checks them. A digest is never recomputed
 over renamed or redacted content and represented as the original digest.
 
 Conflicting content under an immutable decision, attempt or effect identity is
-rejected.
+rejected. Embedded execution-result observations and Control Plane
+reconciliations are checked against their enclosing effect/state contracts.
 
 ## Integrity and redaction
 
-Reconstruction HMAC uses HMAC-SHA256 over canonical reconstruction content with
-the `integrity` field excluded. A verifier must possess the same shared
-secret. This provides shared-secret export integrity; it is not a publicly
-verifiable issuer signature and does not establish production key custody.
+Reconstruction HMAC uses HMAC-SHA256 over canonical reconstruction content plus
+its integrity metadata, with only the HMAC signature value blanked to avoid a
+circular input. The authenticated metadata therefore includes HMAC kind,
+algorithm, canonicalization profile, subject bundle ID, caller-supplied
+`key_id` label and verification claim. Verification also requires the declared
+subject to equal the actual bundle ID and the algorithm/profile to match the
+implemented profile.
+
+A verifier must possess the same shared secret. This provides shared-secret
+export integrity; it is not a publicly verifiable issuer signature and does not
+establish production key custody. `key_id` is merely an authenticated label
+provided by the caller; the HMAC does not independently authenticate the
+identity or custody of that key.
 
 Redaction order is:
 
