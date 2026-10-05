@@ -386,7 +386,38 @@
     }
   ],
   "links": [],
-  "commitments": [],
+  "commitments": [
+    {
+      "label": "payload_commitment",
+      "value": "sha256:6b782ebbcc034edeca4069b31aa4d8cbc9d3eeaf3b2034ab989bb430de962c0e",
+      "algorithm": "SHA-256",
+      "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
+      "source_record_id": "cp:proposal",
+      "source_path": "proposal.payload_commitment",
+      "verification_status": "checked_match",
+      "notes": null
+    },
+    {
+      "label": "effect_id",
+      "value": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
+      "algorithm": "SHA-256",
+      "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
+      "source_record_id": "cp:decision",
+      "source_path": "decisions[0].effect_id",
+      "verification_status": "checked_match",
+      "notes": "Checked under pinned Control Plane effect-id contract."
+    },
+    {
+      "label": "operation_digest",
+      "value": "sha256:6d0773d67340b0f8d1bb305ef5d9df56a9944573be896b253a316fa7e4d7fed9",
+      "algorithm": "SHA-256",
+      "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
+      "source_record_id": "molt:effect",
+      "source_path": "moltbot.effects[0].operation_digest",
+      "verification_status": "checked_match",
+      "notes": "Checked against the exact retained Execution Envelope operation under the pinned canonicalization profile."
+    }
+  ],
   "import_reports": [
     {
       "adapter_profile": "control-plane-bounded-run@28350065",
