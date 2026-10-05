@@ -150,7 +150,7 @@ def import_legacy_control_plane_replay(source: dict[str, Any]) -> Reconstruction
 
     return ReconstructionBundle(
         run_id=str(source["run_id"]),
-        status="complete" if report.complete else "partial",
+        status="reconstruction_complete" if report.complete else "reconstruction_partial",
         producer_profiles=[profile],
         records=records,
         import_reports=[report],
@@ -371,7 +371,7 @@ def import_bounded_workflow(
 
     return ReconstructionBundle(
         run_id=run_id,
-        status="complete" if report.complete else "partial",
+        status="reconstruction_complete" if report.complete else "reconstruction_partial",
         producer_profiles=profiles,
         records=records,
         links=links,
