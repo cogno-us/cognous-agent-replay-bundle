@@ -24,6 +24,46 @@ Agent Replay Bundle defines a portable, JSON-based evidence package for complete
 
 ---
 
+## Reconstruction import 0.2.0
+
+Version 0.2.0 adds a separate, versioned reconstruction surface for actual
+producer records. It does not silently reinterpret legacy `AgentReplayBundle`
+0.1 fields.
+
+Supported profiles are pinned to:
+
+- Agent Control Plane legacy `ReplayBundle` at
+  `283500652d47a692fb0b99a1172a6d5faffbd9a7`;
+- Agent Control Plane bounded `BoundedRunRecord` at the same revision;
+- Moltbot Safe Execution Envelope `0.2.0` and SQLite destination evidence at
+  `6b0ba1185bcd390f71df947dda349415e4105f5f`;
+- Manifest v1.1 at `46c950bed37fe3812000895430bc0312d29e37ce`;
+- Alvorada Authority Context 0.1.0 at
+  `fb3d97938969a89e149e8ff8db2756091d1233fc`.
+
+```python
+from agent_replay_bundle import import_bounded_workflow
+
+bundle = import_bounded_workflow(
+    bounded_run_record,
+    proposal=runtime_proposal,
+    moltbot_export=executor_export,
+)
+```
+
+Reconstruction is non-effecting by default. Import does not rerun a model,
+reevaluate policy, renew authorization, repeat an effect, or independently
+verify delivery. `reconstruction_complete` means the declared import contract
+was represented completely; it is not an effect-completion or verification
+claim.
+
+See [the reconstruction import contract](docs/reconstruction_import.md),
+[migration notes](docs/migration_0_2.md), and the complete synthetic
+`bounded_success_reconstruction_v0_2.json` and
+`bounded_lost_ack_reconstruction_v0_2.json` examples.
+
+---
+
 ## Why it matters
 
 Agent teams need to reconstruct:
@@ -189,7 +229,7 @@ Agent Control Plane can emit replay bundles, but this format can also be used by
 
 ## JSON schemas
 
-Schemas are in `schemas/`. Primary schema: `schemas/agent_replay_bundle.schema.json`.
+Schemas are in `schemas/`. Legacy schema: `schemas/agent_replay_bundle.schema.json`. Reconstruction 0.2 schema: `schemas/reconstruction_bundle_0_2.schema.json`.
 
 All schemas use JSON Schema Draft 2020-12.
 
