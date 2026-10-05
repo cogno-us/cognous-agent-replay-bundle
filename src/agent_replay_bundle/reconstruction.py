@@ -142,7 +142,7 @@ class ReconstructionBundle(BaseModel):
     bundle_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     bundle_version: Literal["0.2.0"] = RECONSTRUCTION_BUNDLE_VERSION
     run_id: str | None = None
-    status: Literal["complete", "partial", "incomplete", "redacted"] = "incomplete"
+    status: Literal["reconstruction_complete", "reconstruction_partial", "incomplete", "redacted"] = "incomplete"
     generated_at: str = Field(default_factory=_now_iso)
     producer_profiles: list[ProducerProfile] = Field(default_factory=list)
     records: list[SourceRecord] = Field(default_factory=list)
