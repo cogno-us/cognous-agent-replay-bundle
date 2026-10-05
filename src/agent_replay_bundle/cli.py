@@ -146,6 +146,7 @@ def cmd_check_examples(args: argparse.Namespace) -> int:
 
     from .loader import load_replay_bundle
     from .models import SignedReplayBundle
+    from .reconstruction import ReconstructionBundle
     from .validator import validate_replay_bundle
 
     examples_dir = Path(__file__).parent.parent.parent / "examples"
@@ -162,12 +163,27 @@ def cmd_check_examples(args: argparse.Namespace) -> int:
     for json_file in sorted(examples_dir.glob("*.json")):
         name = json_file.name
 
+        try:
+            with json_file.open(encoding="utf-8") as f:
+                raw = json.load(f)
+        except json.JSONDecodeError as exc:
+            print(f"  FAIL             {name}: {exc}")
+            all_ok = False
+            continue
+
+        if raw.get("bundle_version") == "0.2.0":
+            try:
+                ReconstructionBundle.model_validate(raw)
+                print(f"  OK (reconstruction) {name}")
+            except ValidationError as exc:
+                print(f"  FAIL             {name}: {exc}")
+                all_ok = False
+            continue
+
         if name == "signed_replay_bundle.json":
             # Load as SignedReplayBundle — structural check only
             try:
-                with json_file.open(encoding="utf-8") as f:
-                    data = json.load(f)
-                SignedReplayBundle.model_validate(data)
+                SignedReplayBundle.model_validate(raw)
                 print(f"  OK (structural)  {name}")
             except (json.JSONDecodeError, ValidationError) as exc:
                 print(f"  FAIL             {name}: {exc}")
