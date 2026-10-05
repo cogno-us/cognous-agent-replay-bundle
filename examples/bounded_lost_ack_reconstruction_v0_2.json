@@ -56,7 +56,7 @@
           "customer_id": "customer-001",
           "refund_reason": "duplicate"
         },
-        "payload_commitment": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "payload_commitment": "sha256:6b782ebbcc034edeca4069b31aa4d8cbc9d3eeaf3b2034ab989bb430de962c0e",
         "requested_permissions": [
           "refund.issue.routine"
         ],
@@ -86,7 +86,7 @@
       "identifiers": {
         "run_id": "run-example",
         "decision_id": "decision-example",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "grant_id": "urn:cognous:grant:routine-1",
         "grant_revision": "1",
         "authority_context_instance_id": "urn:cognous:authority-context:pilot-1",
@@ -95,7 +95,7 @@
       "evidence_class": "producer_reported",
       "data": {
         "decision_id": "decision-example",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "result": "authorized",
         "reasons": [],
         "decided_at": "2026-10-05T19:00:00+00:00",
@@ -109,7 +109,7 @@
           "action_id": "urn:cognous:action:refund-issue-routine-v1",
           "adapter_id": "urn:cognous:adapter:synthetic-refund-v1",
           "target": "urn:cognous:synthetic-account:customer-001",
-          "payload_commitment": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "payload_commitment": "sha256:6b782ebbcc034edeca4069b31aa4d8cbc9d3eeaf3b2034ab989bb430de962c0e",
           "requested_permissions": [
             "refund.issue.routine"
           ],
@@ -145,13 +145,13 @@
       "identifiers": {
         "run_id": "run-example",
         "attempt_id": "cp-attempt-lost",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "decision_id": "decision-example"
       },
       "evidence_class": "producer_reported",
       "data": {
         "attempt_id": "cp-attempt-lost",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "decision_id": "decision-example",
         "started_at": "2026-10-05T19:00:01+00:00",
         "status": "attempted",
@@ -169,13 +169,13 @@
       "identifiers": {
         "run_id": "run-example",
         "attempt_id": "cp-attempt-lost",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "decision_id": "decision-example"
       },
       "evidence_class": "producer_reported",
       "data": {
         "attempt_id": "cp-attempt-lost",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "decision_id": "decision-example",
         "started_at": "2026-10-05T19:00:01+00:00",
         "status": "unknown",
@@ -192,15 +192,15 @@
       "recorded_at": "2026-10-05T19:00:02+00:00",
       "identifiers": {
         "run_id": "run-example",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "observed_at": "2026-10-05T19:00:02+00:00",
         "state": "applied",
         "destination_state": {
-          "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
           "grant_id": "urn:cognous:grant:routine-1",
           "target": "urn:cognous:synthetic-account:customer-001",
           "amount": 50,
@@ -221,7 +221,7 @@
       "recorded_at": null,
       "identifiers": {
         "decision_id": "decision-example",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "manifest_id": "refund-integration-pilot-v1",
         "action_id": "urn:cognous:action:refund-issue-routine-v1",
         "grant_id": "urn:cognous:grant:routine-1",
@@ -234,7 +234,7 @@
       "data": {
         "version": "0.2.0",
         "decision_id": "decision-example",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "operation": {
           "actor": "urn:cognous:identity:refund-agent-1",
           "principal": "urn:cognous:principal:refund-service",
@@ -251,7 +251,7 @@
             "customer_id": "customer-001",
             "refund_reason": "duplicate"
           },
-          "payload_commitment": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "payload_commitment": "sha256:6b782ebbcc034edeca4069b31aa4d8cbc9d3eeaf3b2034ab989bb430de962c0e",
           "requested_permissions": [
             "refund.issue.routine"
           ],
@@ -276,21 +276,21 @@
       "recorded_at": null,
       "identifiers": {
         "decision_id": "decision-example",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "attempt_id": "molt-attempt-lost"
       },
       "evidence_class": "producer_reported",
       "data": {
         "status": "unknown",
         "decision_id": "decision-example",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "attempt_id": "molt-attempt-lost",
         "attempted": true,
         "acknowledged": false,
         "observed_state": "applied",
         "newly_executed": true,
         "observation": {
-          "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
           "state": "applied"
         },
         "error": "synthetic acknowledgement unavailable after durable commit"
@@ -305,13 +305,13 @@
       "recorded_at": null,
       "identifiers": {
         "attempt_id": "molt-attempt-lost",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "decision_id": "decision-example"
       },
       "evidence_class": "producer_reported",
       "data": {
         "attempt_id": "molt-attempt-lost",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "decision_id": "decision-example",
         "operation_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
         "created_at": 1
@@ -327,7 +327,7 @@
       "identifiers": {
         "attempt_id": "molt-attempt-lost",
         "event_id": "1",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "decision_id": "decision-example"
       },
       "evidence_class": "producer_reported",
@@ -349,7 +349,7 @@
       "identifiers": {
         "attempt_id": "molt-attempt-lost",
         "event_id": "2",
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "decision_id": "decision-example"
       },
       "evidence_class": "producer_reported",
@@ -369,12 +369,12 @@
       "source_path": "moltbot.effects[0]",
       "recorded_at": null,
       "identifiers": {
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "grant_id": "urn:cognous:grant:routine-1"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "effect_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effect_id": "sha256:0cc8919ed538dd68522e70c8176d5e38d06cf4f29ee0f1a0c32ab4d9b9e09ca0",
         "operation_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
         "grant_id": "urn:cognous:grant:routine-1",
         "target": "urn:cognous:synthetic-account:customer-001",
