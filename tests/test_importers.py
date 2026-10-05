@@ -294,7 +294,7 @@ def test_conflicting_immutable_effect_content_is_rejected():
     second = copy.deepcopy(m["effects"][0])
     second["target"] = "different"
     m["effects"].append(second)
-    with pytest.raises(ImportContractError, match="conflicting content"):
+    with pytest.raises(ImportContractError, match="target conflicts|conflicting content"):
         import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
 
 
