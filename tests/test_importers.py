@@ -52,7 +52,7 @@ def legacy_source():
 
 def _binding():
     return {
-        "proposal_commitment": cp["decisions"][0]["binding"]["proposal_commitment"],
+        "proposal_commitment": "placeholder",
         "manifest_id": "m1",
         "manifest_version": "1.1",
         "manifest_digest": "sha256:" + "2" * 64,
