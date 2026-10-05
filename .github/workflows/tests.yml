@@ -8,7 +8,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
@@ -91,21 +91,6 @@ jobs:
           name: reconstruction-examples-${{ github.sha }}
           path: replay-bundle/generated-examples/*.json
           if-no-files-found: error
-
-      - name: Commit regenerated published examples
-        if: matrix.python-version == '3.12' && github.event_name == 'push'
-        working-directory: replay-bundle
-        shell: bash
-        run: |
-          cp generated-examples/bounded_success_reconstruction_v0_2.json examples/
-          cp generated-examples/bounded_lost_ack_reconstruction_v0_2.json examples/
-          if ! git diff --quiet -- examples/bounded_success_reconstruction_v0_2.json examples/bounded_lost_ack_reconstruction_v0_2.json; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add examples/bounded_success_reconstruction_v0_2.json examples/bounded_lost_ack_reconstruction_v0_2.json
-            git commit -m "Regenerate reconstruction examples from pinned producers [skip ci]"
-            git push origin HEAD:worker7/replay-cross-record-validation
-          fi
 
       - name: Check examples
         working-directory: replay-bundle
