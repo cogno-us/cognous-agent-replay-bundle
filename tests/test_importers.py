@@ -189,6 +189,7 @@ def moltbot_source(cp):
         "grant_revision": "1",
         "effective_max_effects": 1,
     }
+    operation_digest = _sha256(op)
     return {
         "execution_envelope": {
             "version": "0.2.0",
@@ -213,7 +214,7 @@ def moltbot_source(cp):
             "attempt_id": "molt-attempt-1",
             "effect_id": effect_id,
             "decision_id": "decision-1",
-            "operation_digest": "sha256:" + "6" * 64,
+            "operation_digest": operation_digest,
             "created_at": 1.0,
         }],
         "attempt_events": [
@@ -222,7 +223,7 @@ def moltbot_source(cp):
         ],
         "effects": [{
             "effect_id": effect_id,
-            "operation_digest": "sha256:" + "6" * 64,
+            "operation_digest": operation_digest,
             "grant_id": "grant-1",
             "target": "target",
             "amount": 50.0,
@@ -293,11 +294,41 @@ def test_conflicting_immutable_effect_content_is_rejected():
         import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
 
 
+def test_dangling_control_plane_decision_reference_is_rejected():
+    cp = bounded_source()
+    cp["attempts"][0]["decision_id"] = "missing"
+    with pytest.raises(ImportContractError, match="dangling decision_id"):
+        import_bounded_workflow(cp, proposal=proposal_source())
+
+
+def test_dangling_control_plane_effect_reference_is_rejected():
+    cp = bounded_source()
+    cp["observations"][0]["effect_id"] = "missing"
+    with pytest.raises(ImportContractError, match="dangling effect_id"):
+        import_bounded_workflow(cp, proposal=proposal_source())
+
+
 def test_dangling_moltbot_attempt_event_is_rejected():
     cp = bounded_source()
     m = moltbot_source(cp)
     m["attempt_events"][0]["attempt_id"] = "missing"
     with pytest.raises(ImportContractError, match="dangling"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
+
+
+def test_moltbot_operation_digest_tamper_is_rejected():
+    cp = bounded_source()
+    m = moltbot_source(cp)
+    m["effects"][0]["operation_digest"] = "sha256:" + "0" * 64
+    with pytest.raises(ImportContractError, match="operation_digest mismatch"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
+
+
+def test_moltbot_identifier_mismatch_is_rejected():
+    cp = bounded_source()
+    m = moltbot_source(cp)
+    m["execution_result"]["effect_id"] = "wrong"
+    with pytest.raises(ImportContractError, match="identifiers"):
         import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=m)
 
 
