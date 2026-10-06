@@ -19,7 +19,8 @@ The importer's default semantics are therefore non-effecting.
 |---|---|---|
 | `control-plane-legacy-replay@28350065` | `ReplayBundle` from Cognous Agent Control Plane | no embedded format version; pinned to commit `283500652d47a692fb0b99a1172a6d5faffbd9a7` |
 | `control-plane-bounded-run@28350065` | `BoundedRunRecord` from Cognous Agent Control Plane | no embedded format version; pinned to the same commit |
-| `moltbot-safe-envelope-0.2.0@6b0ba118` | Execution Envelope 0.2.0 plus SQLite effects, attempts and append-only attempt events | explicit envelope version plus pinned commit `6b0ba1185bcd390f71df947dda349415e4105f5f` |
+| `moltbot-safe-executor-evidence-1.0.0@a4df7a9` | Executor producer evidence 1.0.0 | explicit profile/schema/envelope version plus reviewed producer revision `a4df7a925ca1b820b9958c479ce28616547cc6d0` |
+| `moltbot-safe-envelope-0.2.0@6b0ba118` | Historical unversioned Execution Envelope + SQLite evidence | legacy revision-pinned compatibility only; not relabeled as profile 1.0.0 |
 
 The bounded adapter is also tested with Manifest v1.1 at
 `46c950bed37fe3812000895430bc0312d29e37ce` and Alvorada Authority Context
@@ -175,3 +176,16 @@ may label separately produced evidence as `locally_generated` or
 `independently_checked`, but the importer does not manufacture either label.
 Synthetic Moltbot SQLite observation is producer/local destination evidence, not
 independent institutional verification.
+
+
+## Producer provenance semantics
+
+The executor producer record separates interface/profile version from repository
+revision. Its repository revision field is source-asserted. Replay validates
+that the source assertion matches the reviewed compatibility profile, but does
+not claim that the artifact independently proves its own repository provenance.
+Independent checkout or artifact attestation, when available, is separate
+evidence.
+
+Contradictory profile versions, repository revisions, decision/effect bindings,
+or operation digests are contract errors rather than migration candidates.
