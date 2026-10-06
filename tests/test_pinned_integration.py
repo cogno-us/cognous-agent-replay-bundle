@@ -14,7 +14,7 @@ from agent_replay_bundle.importers import import_bounded_workflow
 
 
 CP_REVISION = "283500652d47a692fb0b99a1172a6d5faffbd9a7"
-MOLTBOT_REVISION = "6b0ba1185bcd390f71df947dda349415e4105f5f"
+MOLTBOT_REVISION = "054e92d12ccb0bc756ca6652f39fc13b51e05d9b"
 MANIFEST_REVISION = "46c950bed37fe3812000895430bc0312d29e37ce"
 ALVORADA_REVISION = "fb3d97938969a89e149e8ff8db2756091d1233fc"
 
@@ -51,14 +51,16 @@ def _sqlite_rows(path: Path, table: str) -> list[dict]:
 
 
 def _export_sources(workflow, proposal, request, result, destination):
+    from engine.producer_contract import export_execution_artifacts
+
     cp_record = workflow.records.load().model_dump(mode="json")
-    moltbot = {
-        "execution_envelope": dataclasses.asdict(request),
-        "execution_result": dataclasses.asdict(result),
-        "effects": _sqlite_rows(destination.path, "effects"),
-        "attempts": _sqlite_rows(destination.path, "attempts"),
-        "attempt_events": _sqlite_rows(destination.path, "attempt_events"),
-    }
+    moltbot = export_execution_artifacts(
+        request,
+        result,
+        destination,
+        repository_revision=MOLTBOT_REVISION,
+        source_asserted_provenance={"test_source": "pinned_integration"},
+    )
     return cp_record, proposal.model_dump(mode="json", exclude_none=False), moltbot
 
 
