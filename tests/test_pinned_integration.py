@@ -14,7 +14,7 @@ from agent_replay_bundle.importers import import_bounded_workflow
 
 
 CP_REVISION = "283500652d47a692fb0b99a1172a6d5faffbd9a7"
-MOLTBOT_REVISION = "6b0ba1185bcd390f71df947dda349415e4105f5f"
+MOLTBOT_REVISION = "a4df7a925ca1b820b9958c479ce28616547cc6d0"
 MANIFEST_REVISION = "46c950bed37fe3812000895430bc0312d29e37ce"
 ALVORADA_REVISION = "fb3d97938969a89e149e8ff8db2756091d1233fc"
 
@@ -51,14 +51,15 @@ def _sqlite_rows(path: Path, table: str) -> list[dict]:
 
 
 def _export_sources(workflow, proposal, request, result, destination):
+    from engine.producer_contract import export_executor_evidence
+
     cp_record = workflow.records.load().model_dump(mode="json")
-    moltbot = {
-        "execution_envelope": dataclasses.asdict(request),
-        "execution_result": dataclasses.asdict(result),
-        "effects": _sqlite_rows(destination.path, "effects"),
-        "attempts": _sqlite_rows(destination.path, "attempts"),
-        "attempt_events": _sqlite_rows(destination.path, "attempt_events"),
-    }
+    moltbot = export_executor_evidence(
+        envelope=request,
+        result=result,
+        destination=destination,
+        repository_revision=MOLTBOT_REVISION,
+    )
     return cp_record, proposal.model_dump(mode="json", exclude_none=False), moltbot
 
 
@@ -179,7 +180,7 @@ def test_actual_pinned_duplicate_restart_reconciles_without_second_effect(tmp_pa
     restarted_executor = h.PinnedControlPlaneExecutor(
         workflow=workflow,
         destination=restarted_destination,
-        policy=h.policy(request.operation),
+        policy=__import__("engine.producer_contract", fromlist=["policy_for_operation"]).policy_for_operation(request.operation),
     )
     second = restarted_executor.execute(
         envelope=request, proposal=proposal, decision=decision, now=helper.NOW
