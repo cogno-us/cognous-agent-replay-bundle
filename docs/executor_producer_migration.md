@@ -31,3 +31,37 @@ from a newer executor implementation.
 
 Migration is therefore forward-only: newly produced evidence should use the
 versioned producer profile; stored historical bundles remain historical.
+
+
+## Accepted producer implementation
+
+The supported versioned executor profile `1.0.0` is accepted only from:
+
+`cogno-us/moltbot-safe@1d308faf664c504b6e310db3c7a310153ef7b067`
+
+The prior feature head `054e92d12ccb0bc756ca6652f39fc13b51e05d9b`
+is not treated as an interchangeable accepted revision. Historical versioned
+test artifacts from that head are not relabeled as if they were emitted by the
+accepted merge.
+
+## Attempt namespace and lineage validation
+
+Versioned producer exports must carry `attempt_identity`,
+`control_plane_attempts` and `observations`.
+
+Replay preserves two attempt namespaces:
+
+- `executor`: owned by `cogno-us/moltbot-safe` and resolvable to retained
+  destination attempt records.
+- `control_plane`: owned by
+  `cogno-us/cognous-agent-control-plane` and resolvable to an explicitly
+  attributed Control Plane attempt.
+
+A Control Plane attempt is accepted only when the complete producer-supplied
+attempt object exactly matches the retained Control Plane run record for that
+attempt ID, decision and effect. Matching labels or IDs alone do not establish
+lineage.
+
+Legitimate historical `absent` and `unknown` observations may contain no
+effect row. Applied or partial observations require retained destination effect
+evidence. Denied results cannot coexist with retained effect evidence.
