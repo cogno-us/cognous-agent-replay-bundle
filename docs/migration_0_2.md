@@ -89,3 +89,22 @@ A `key_id` in current metadata is an authenticated caller-supplied label, not
 proof of key identity or custody. Redacted derivatives still discard source
 integrity metadata, receive a new bundle identity and must be signed again if
 shared-secret authentication is required.
+
+
+## Executor producer profile 1.0.0
+
+New executor evidence may declare
+`urn:cognous:profiles:moltbot-safe-executor-evidence:1.0.0`. The importer
+requires the exact profile/schema/envelope versions, the reviewed producer
+revision, and consistent decision/effect/operation bindings.
+
+The embedded repository revision is a **source-asserted provenance claim**.
+Import does not turn it into independently established provenance. A pinned CI
+checkout can establish compatibility separately, but that fact is not written
+back into the producer artifact.
+
+Historical executor exports with no `producer_profile` remain supported under
+the prior revision-pinned adapter for
+`6b0ba1185bcd390f71df947dda349415e4105f5f`. They are not relabeled as
+profile 1.0.0 and retain `moltbot_legacy_unversioned=true` in reconstruction
+metadata.
