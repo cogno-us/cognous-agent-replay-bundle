@@ -488,3 +488,242 @@ def test_missing_proposal_with_moltbot_evidence_is_rejected_not_promoted_complet
     cp = bounded_source()
     with pytest.raises(ImportContractError, match="requires the corresponding RuntimeProposal"):
         import_bounded_workflow(cp, moltbot_export=moltbot_source(cp))
+
+
+def versioned_moltbot_source(cp):
+    from agent_replay_bundle.importers import (
+        MOLTBOT_PRODUCER_PROFILE_ID,
+        MOLTBOT_PRODUCER_PROFILE_VERSION,
+        MOLTBOT_SAFE_REVISION,
+    )
+    source = moltbot_source(cp)
+    source["producer_profile"] = {
+        "profile_id": MOLTBOT_PRODUCER_PROFILE_ID,
+        "profile_version": MOLTBOT_PRODUCER_PROFILE_VERSION,
+        "execution_envelope_version": "0.2.0",
+    }
+    source["repository"] = {
+        "repository": "cogno-us/moltbot-safe",
+        "revision": MOLTBOT_SAFE_REVISION,
+        "revision_status": "source_asserted",
+    }
+    source["provenance"] = {
+        "source_asserted": {
+            "repository_revision": MOLTBOT_SAFE_REVISION,
+            "producer_profile_id": MOLTBOT_PRODUCER_PROFILE_ID,
+            "producer_profile_version": MOLTBOT_PRODUCER_PROFILE_VERSION,
+        },
+        "independently_established": [],
+        "meaning": "source assertion only",
+    }
+    observation = copy.deepcopy(source["execution_result"]["observation"])
+    observation["destination_state"] = {
+        "effect_id": source["execution_envelope"]["effect_id"],
+        "grant_id": source["execution_envelope"]["operation"]["grant_id"],
+        "target": source["execution_envelope"]["operation"]["target"],
+        "amount": source["execution_envelope"]["operation"]["amount"],
+        "unit": source["execution_envelope"]["operation"]["unit"],
+        "payload": copy.deepcopy(source["execution_envelope"]["operation"]["payload"]),
+        "state": "applied",
+    }
+    source["attempt_identity"] = {
+        "namespace": "executor",
+        "attempt_id": source["execution_result"]["attempt_id"],
+        "owner": "cogno-us/moltbot-safe",
+    }
+    source["control_plane_attempts"] = []
+    source["observations"] = [observation]
+    return source
+
+
+def test_versioned_executor_profile_is_distinct_from_repository_provenance():
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    bundle = import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+    contract = bundle.metadata["moltbot_producer_contract"]
+    assert contract["interface_profile_version"] == "1.0.0"
+    assert contract["repository_revision"] == source["repository"]["revision"]
+    assert contract["provenance"]["source_asserted"]["repository_revision"] == source["repository"]["revision"]
+    assert contract["provenance"]["independently_established"] == []
+    assert contract["legacy"] is False
+    assert any(r.record_type == "executor_observation" for r in bundle.records)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["profile_id", "profile_version", "repository_revision", "provenance_revision"],
+)
+def test_versioned_executor_profile_rejects_unsupported_or_contradictory_contract(mutation):
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    if mutation == "profile_id":
+        source["producer_profile"]["profile_id"] = "urn:unsupported"
+    elif mutation == "profile_version":
+        source["producer_profile"]["profile_version"] = "9.9.9"
+    elif mutation == "repository_revision":
+        source["repository"]["revision"] = "unsupported"
+    else:
+        source["provenance"]["source_asserted"]["repository_revision"] = "contradictory"
+    with pytest.raises(ImportContractError, match="unsupported|contradicts"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
+
+def test_legacy_unversioned_executor_export_remains_revision_pinned():
+    from agent_replay_bundle.importers import LEGACY_MOLTBOT_SAFE_REVISION
+
+    cp = bounded_source()
+    bundle = import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=moltbot_source(cp))
+    contract = bundle.metadata["moltbot_producer_contract"]
+    assert contract["legacy"] is True
+    assert contract["repository_revision"] == LEGACY_MOLTBOT_SAFE_REVISION
+    assert contract["interface_profile_version"] is None
+
+
+
+def test_versioned_executor_rejects_wrong_attempt_namespace_owner():
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source["attempt_identity"]["owner"] = "cogno-us/cognous-agent-control-plane"
+    with pytest.raises(ImportContractError, match="executor attempt_identity owner mismatch"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
+
+def test_versioned_executor_rejects_dangling_executor_attempt_identity():
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source["attempt_identity"]["attempt_id"] = "executor-attempt-missing"
+    source["execution_result"]["attempt_id"] = "executor-attempt-missing"
+    with pytest.raises(ImportContractError, match="dangling attempt_id|dangling executor attempt_id"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
+
+def _versioned_control_plane_reconciliation(cp):
+    source = versioned_moltbot_source(cp)
+    cp_attempt = copy.deepcopy(cp["attempts"][-1])
+    source["execution_result"]["status"] = "reconciled"
+    source["execution_result"]["newly_executed"] = False
+    source["execution_result"]["attempt_id"] = cp_attempt["attempt_id"]
+    source["attempt_identity"] = {
+        "namespace": "control_plane",
+        "attempt_id": cp_attempt["attempt_id"],
+        "owner": "cogno-us/cognous-agent-control-plane",
+    }
+    source["control_plane_attempts"] = [cp_attempt]
+    return source
+
+
+def test_control_plane_attempt_evidence_requires_exact_owning_run_record():
+    cp = bounded_source()
+    source = _versioned_control_plane_reconciliation(cp)
+    bundle = import_bounded_workflow(
+        cp, proposal=proposal_source(), moltbot_export=source
+    )
+    attributed = [
+        r for r in bundle.records
+        if r.record_type == "moltbot_attributed_control_plane_attempt"
+    ]
+    assert len(attributed) == 1
+    links = [
+        link for link in bundle.links
+        if link.from_record_id == attributed[0].record_id
+    ]
+    assert len(links) == 1
+    assert links[0].establishes_identity_equivalence is True
+
+
+def test_control_plane_attempt_matching_labels_without_full_record_match_is_rejected():
+    cp = bounded_source()
+    source = _versioned_control_plane_reconciliation(cp)
+    source["control_plane_attempts"][0]["status"] = "fabricated-status"
+    with pytest.raises(ImportContractError, match="conflicts with owning producer record"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
+
+def test_control_plane_attempt_wrong_namespace_attribution_is_rejected():
+    cp = bounded_source()
+    source = _versioned_control_plane_reconciliation(cp)
+    source["attempt_identity"]["namespace"] = "executor"
+    source["attempt_identity"]["owner"] = "cogno-us/moltbot-safe"
+    with pytest.raises(ImportContractError, match="dangling attempt_id|dangling executor attempt_id"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
+
+@pytest.mark.parametrize("state", ["absent", "unknown"])
+def test_versioned_historical_absence_or_unknown_without_effect_is_supported(state):
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source["effects"] = []
+    source["attempts"] = []
+    source["attempt_events"] = []
+    source["attempt_identity"] = None
+    source["control_plane_attempts"] = []
+    source["execution_result"].update({
+        "status": "observed",
+        "attempt_id": None,
+        "attempted": False,
+        "acknowledged": False,
+        "observed_state": state,
+        "newly_executed": False,
+        "observation": {
+            "effect_id": source["execution_envelope"]["effect_id"],
+            "state": state,
+            "destination_state": {},
+        },
+    })
+    source["observations"] = [copy.deepcopy(source["execution_result"]["observation"])]
+    bundle = import_bounded_workflow(
+        cp, proposal=proposal_source(), moltbot_export=source
+    )
+    assert any(
+        r.record_type == "executor_observation" and r.data["state"] == state
+        for r in bundle.records
+    )
+
+
+def test_versioned_denied_no_effect_outcome_is_supported():
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source["effects"] = []
+    source["attempts"] = []
+    source["attempt_events"] = []
+    source["attempt_identity"] = None
+    source["control_plane_attempts"] = []
+    source["execution_result"].update({
+        "status": "denied",
+        "attempt_id": None,
+        "attempted": False,
+        "acknowledged": False,
+        "observed_state": "unknown",
+        "newly_executed": False,
+        "observation": {},
+    })
+    source["observations"] = []
+    bundle = import_bounded_workflow(
+        cp, proposal=proposal_source(), moltbot_export=source
+    )
+    assert not any(r.record_type == "destination_effect" for r in bundle.records)
+
+
+def test_versioned_denied_with_effect_is_rejected():
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source["execution_result"]["status"] = "denied"
+    source["execution_result"]["attempt_id"] = None
+    source["attempt_identity"] = None
+    source["execution_result"]["attempted"] = False
+    source["execution_result"]["newly_executed"] = False
+    with pytest.raises(ImportContractError, match="denied execution result contradicts"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
+
+def test_versioned_operation_content_substitution_is_rejected_even_if_attempt_digest_changes():
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source["execution_envelope"]["operation"]["amount"] = 999.0
+    from agent_replay_bundle.importers import _sha256
+    changed = _sha256(source["execution_envelope"]["operation"])
+    source["attempts"][0]["operation_digest"] = changed
+    source["effects"][0]["operation_digest"] = changed
+    source["effects"][0]["amount"] = 999.0
+    with pytest.raises(ImportContractError, match="amount conflicts"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)

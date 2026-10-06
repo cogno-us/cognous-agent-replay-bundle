@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: cogno-us/moltbot-safe
-          ref: 6b0ba1185bcd390f71df947dda349415e4105f5f
+          ref: 1d308faf664c504b6e310db3c7a310153ef7b067
           path: pinned/moltbot-safe
 
       - name: Checkout pinned Manifest
@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           test "$(git -C pinned/control-plane rev-parse HEAD)" = "283500652d47a692fb0b99a1172a6d5faffbd9a7"
-          test "$(git -C pinned/moltbot-safe rev-parse HEAD)" = "6b0ba1185bcd390f71df947dda349415e4105f5f"
+          test "$(git -C pinned/moltbot-safe rev-parse HEAD)" = "1d308faf664c504b6e310db3c7a310153ef7b067"
           test "$(git -C pinned/manifest rev-parse HEAD)" = "46c950bed37fe3812000895430bc0312d29e37ce"
           test "$(git -C pinned/alvorada rev-parse HEAD)" = "fb3d97938969a89e149e8ff8db2756091d1233fc"
 
