@@ -18,13 +18,69 @@ from .reconstruction import (
 )
 
 CONTROL_PLANE_REVISION = "283500652d47a692fb0b99a1172a6d5faffbd9a7"
-MOLTBOT_SAFE_REVISION = "6b0ba1185bcd390f71df947dda349415e4105f5f"
+LEGACY_MOLTBOT_SAFE_REVISION = "6b0ba1185bcd390f71df947dda349415e4105f5f"
+MOLTBOT_SAFE_REVISION = "a4df7a925ca1b820b9958c479ce28616547cc6d0"
+MOLTBOT_EXECUTOR_PROFILE = "urn:cognous:profiles:moltbot-safe-executor-evidence:1.0.0"
+MOLTBOT_EXECUTOR_PROFILE_VERSION = "1.0.0"
 MANIFEST_REVISION = "46c950bed37fe3812000895430bc0312d29e37ce"
 ALVORADA_REVISION = "fb3d97938969a89e149e8ff8db2756091d1233fc"
 
 LEGACY_PROFILE = "control-plane-legacy-replay@28350065"
 BOUNDED_PROFILE = "control-plane-bounded-run@28350065"
-MOLTBOT_PROFILE = "moltbot-safe-envelope-0.2.0@6b0ba118"
+LEGACY_MOLTBOT_PROFILE = "moltbot-safe-envelope-0.2.0@6b0ba118"
+MOLTBOT_PROFILE = "moltbot-safe-executor-evidence-1.0.0@a4df7a9"
+
+
+def _resolve_moltbot_compatibility(source: dict[str, Any]) -> dict[str, Any]:
+    declared = source.get("producer_profile")
+    if declared is None:
+        return {
+            "profile_id": LEGACY_MOLTBOT_PROFILE,
+            "revision": LEGACY_MOLTBOT_SAFE_REVISION,
+            "format_version": "0.2.0",
+            "producer_contract_version": None,
+            "repository_revision_provenance": "revision_pinned_legacy",
+            "independently_established_provenance": False,
+            "legacy_unversioned": True,
+        }
+    declared = _obj(declared, "moltbot_export.producer_profile")
+    expected = {
+        "profile": MOLTBOT_EXECUTOR_PROFILE,
+        "profile_version": MOLTBOT_EXECUTOR_PROFILE_VERSION,
+        "schema_version": "1.0.0",
+        "execution_envelope_version": "0.2.0",
+        "repository_revision": MOLTBOT_SAFE_REVISION,
+        "repository_revision_provenance": "source_asserted",
+        "independently_established_provenance": False,
+    }
+    for field, value in expected.items():
+        _require_equal(
+            declared.get(field),
+            value,
+            "moltbot_export.producer_profile." + field,
+        )
+    bindings = _obj(source.get("bindings"), "moltbot_export.bindings")
+    envelope = _obj(source.get("execution_envelope"), "moltbot_export.execution_envelope")
+    result = _obj(source.get("execution_result"), "moltbot_export.execution_result")
+    _require_equal(bindings.get("decision_id"), envelope.get("decision_id"), "moltbot_export.bindings.decision_id")
+    _require_equal(bindings.get("effect_id"), envelope.get("effect_id"), "moltbot_export.bindings.effect_id")
+    _require_equal(result.get("decision_id"), envelope.get("decision_id"), "moltbot_export.execution_result.decision_id")
+    _require_equal(result.get("effect_id"), envelope.get("effect_id"), "moltbot_export.execution_result.effect_id")
+    operation = _obj(envelope.get("operation"), "moltbot_export.execution_envelope.operation")
+    _require_equal(
+        bindings.get("operation_digest"),
+        _sha256(operation),
+        "moltbot_export.bindings.operation_digest",
+    )
+    return {
+        "profile_id": MOLTBOT_PROFILE,
+        "revision": MOLTBOT_SAFE_REVISION,
+        "format_version": "1.0.0",
+        "producer_contract_version": MOLTBOT_EXECUTOR_PROFILE_VERSION,
+        "repository_revision_provenance": "source_asserted",
+        "independently_established_provenance": False,
+        "legacy_unversioned": False,
+    }
 
 
 class ImportContractError(ValueError):
@@ -456,19 +512,35 @@ def import_bounded_workflow(
         notes="No embedded format version; adapter is revision-pinned.",
     )]
 
+    moltbot_compatibility = None
     if moltbot_export is not None:
+        source_export = _obj(moltbot_export, "moltbot_export")
+        moltbot_compatibility = _resolve_moltbot_compatibility(source_export)
         mr, ml, mc, mf = _import_moltbot(
-            moltbot_export, seq, records, proposal=p if proposal is not None else None
+            source_export,
+            seq,
+            records,
+            proposal=p if proposal is not None else None,
+            producer_profile_id=moltbot_compatibility["profile_id"],
         )
         records.extend(mr); links.extend(ml); commitments.extend(mc); report.findings.extend(mf)
         profiles.append(ProducerProfile(
-            profile_id=MOLTBOT_PROFILE,
+            profile_id=moltbot_compatibility["profile_id"],
             producer="Moltbot Safe",
             repository="cogno-us/moltbot-safe",
-            revision=MOLTBOT_SAFE_REVISION,
-            format_name="ExecutionEnvelope + SQLite evidence",
-            format_version="0.2.0",
-            notes="Synthetic local destination evidence; not independent institutional verification.",
+            revision=moltbot_compatibility["revision"],
+            format_name=(
+                "Executor producer evidence"
+                if not moltbot_compatibility["legacy_unversioned"]
+                else "ExecutionEnvelope + SQLite evidence"
+            ),
+            format_version=moltbot_compatibility["format_version"],
+            notes=(
+                "Source-asserted producer profile; synthetic local destination evidence; "
+                "not independently established institutional verification."
+                if not moltbot_compatibility["legacy_unversioned"]
+                else "Legacy unversioned producer export; compatibility remains revision-pinned."
+            ),
         ))
     else:
         report.complete = False
@@ -504,7 +576,25 @@ def import_bounded_workflow(
         },
         metadata={
             "control_plane_revision": CONTROL_PLANE_REVISION,
-            "moltbot_safe_revision": MOLTBOT_SAFE_REVISION if moltbot_export else None,
+            "moltbot_safe_revision": (
+                moltbot_compatibility["revision"] if moltbot_compatibility else None
+            ),
+            "moltbot_producer_contract_version": (
+                moltbot_compatibility["producer_contract_version"]
+                if moltbot_compatibility else None
+            ),
+            "moltbot_repository_revision_provenance": (
+                moltbot_compatibility["repository_revision_provenance"]
+                if moltbot_compatibility else None
+            ),
+            "moltbot_revision_independently_established": (
+                moltbot_compatibility["independently_established_provenance"]
+                if moltbot_compatibility else None
+            ),
+            "moltbot_legacy_unversioned": (
+                moltbot_compatibility["legacy_unversioned"]
+                if moltbot_compatibility else None
+            ),
             "manifest_revision": MANIFEST_REVISION,
             "alvorada_revision": ALVORADA_REVISION,
         },
@@ -512,8 +602,12 @@ def import_bounded_workflow(
 
 
 def _import_moltbot(
-    source: dict[str, Any], seq: int, cp_records: list[SourceRecord],
-    *, proposal: dict[str, Any] | None,
+    source: dict[str, Any],
+    seq: int,
+    cp_records: list[SourceRecord],
+    *,
+    proposal: dict[str, Any] | None,
+    producer_profile_id: str,
 ):
     source = _obj(source, "moltbot_export")
     required = {"execution_envelope", "execution_result", "effects", "attempts", "attempt_events"}
@@ -556,7 +650,7 @@ def _import_moltbot(
     findings: list[ImportFinding] = []
 
     er = _record(
-        MOLTBOT_PROFILE, "execution_envelope", seq, "moltbot.execution_envelope", envelope,
+        producer_profile_id, "execution_envelope", seq, "moltbot.execution_envelope", envelope,
         ids={
             "decision_id": envelope.get("decision_id"), "effect_id": envelope.get("effect_id"),
             "requested_attempt_id": envelope.get("attempt_id"),
@@ -592,7 +686,7 @@ def _import_moltbot(
                 result_observation, envelope_effect, op, "execution_result.observation"
             )
     records.append(_record(
-        MOLTBOT_PROFILE, "execution_result", seq, "moltbot.execution_result", result,
+        producer_profile_id, "execution_result", seq, "moltbot.execution_result", result,
         ids={"decision_id": result.get("decision_id"), "effect_id": result.get("effect_id"),
              "attempt_id": result.get("attempt_id")},
     )); seq += 1
@@ -610,7 +704,7 @@ def _import_moltbot(
             raise ImportContractError(f"Moltbot attempt {aid} operation_digest mismatch")
         _unique_or_same(attempts, aid, raw, "Moltbot attempt_id")
         records.append(_record(
-            MOLTBOT_PROFILE, "destination_attempt", seq, f"moltbot.attempts[{i}]", raw,
+            producer_profile_id, "destination_attempt", seq, f"moltbot.attempts[{i}]", raw,
             ids={"attempt_id": aid, "effect_id": raw.get("effect_id"), "decision_id": raw.get("decision_id")},
         )); seq += 1
 
@@ -620,7 +714,7 @@ def _import_moltbot(
         if aid not in attempts:
             raise ImportContractError(f"dangling Moltbot attempt event: {aid}")
         records.append(_record(
-            MOLTBOT_PROFILE, "destination_attempt_event", seq, f"moltbot.attempt_events[{i}]", raw,
+            producer_profile_id, "destination_attempt_event", seq, f"moltbot.attempt_events[{i}]", raw,
             ids={"attempt_id": aid, "event_id": raw.get("event_id"),
                  "effect_id": attempts[aid].get("effect_id"), "decision_id": attempts[aid].get("decision_id")},
         )); seq += 1
@@ -664,7 +758,7 @@ def _import_moltbot(
         )
         _unique_or_same(effects, eid, invariant, "effect_id")
         rr = _record(
-            MOLTBOT_PROFILE, "destination_effect", seq, f"moltbot.effects[{i}]", raw,
+            producer_profile_id, "destination_effect", seq, f"moltbot.effects[{i}]", raw,
             ids={"effect_id": eid, "grant_id": raw.get("grant_id")},
         )
         records.append(rr); seq += 1
