@@ -488,3 +488,76 @@ def test_missing_proposal_with_moltbot_evidence_is_rejected_not_promoted_complet
     cp = bounded_source()
     with pytest.raises(ImportContractError, match="requires the corresponding RuntimeProposal"):
         import_bounded_workflow(cp, moltbot_export=moltbot_source(cp))
+
+
+def versioned_moltbot_source(cp):
+    from agent_replay_bundle.importers import (
+        MOLTBOT_PRODUCER_PROFILE_ID,
+        MOLTBOT_PRODUCER_PROFILE_VERSION,
+        MOLTBOT_SAFE_REVISION,
+    )
+    source = moltbot_source(cp)
+    source["producer_profile"] = {
+        "profile_id": MOLTBOT_PRODUCER_PROFILE_ID,
+        "profile_version": MOLTBOT_PRODUCER_PROFILE_VERSION,
+        "execution_envelope_version": "0.2.0",
+    }
+    source["repository"] = {
+        "repository": "cogno-us/moltbot-safe",
+        "revision": MOLTBOT_SAFE_REVISION,
+        "revision_status": "source_asserted",
+    }
+    source["provenance"] = {
+        "source_asserted": {
+            "repository_revision": MOLTBOT_SAFE_REVISION,
+            "producer_profile_id": MOLTBOT_PRODUCER_PROFILE_ID,
+            "producer_profile_version": MOLTBOT_PRODUCER_PROFILE_VERSION,
+        },
+        "independently_established": [],
+        "meaning": "source assertion only",
+    }
+    source["observations"] = [copy.deepcopy(source["execution_result"]["observation"])]
+    return source
+
+
+def test_versioned_executor_profile_is_distinct_from_repository_provenance():
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    bundle = import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+    contract = bundle.metadata["moltbot_producer_contract"]
+    assert contract["interface_profile_version"] == "1.0.0"
+    assert contract["repository_revision"] == source["repository"]["revision"]
+    assert contract["provenance"]["source_asserted"]["repository_revision"] == source["repository"]["revision"]
+    assert contract["provenance"]["independently_established"] == []
+    assert contract["legacy"] is False
+    assert any(r.record_type == "executor_observation" for r in bundle.records)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["profile_id", "profile_version", "repository_revision", "provenance_revision"],
+)
+def test_versioned_executor_profile_rejects_unsupported_or_contradictory_contract(mutation):
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    if mutation == "profile_id":
+        source["producer_profile"]["profile_id"] = "urn:unsupported"
+    elif mutation == "profile_version":
+        source["producer_profile"]["profile_version"] = "9.9.9"
+    elif mutation == "repository_revision":
+        source["repository"]["revision"] = "unsupported"
+    else:
+        source["provenance"]["source_asserted"]["repository_revision"] = "contradictory"
+    with pytest.raises(ImportContractError, match="unsupported|contradicts"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
+
+def test_legacy_unversioned_executor_export_remains_revision_pinned():
+    from agent_replay_bundle.importers import LEGACY_MOLTBOT_SAFE_REVISION
+
+    cp = bounded_source()
+    bundle = import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=moltbot_source(cp))
+    contract = bundle.metadata["moltbot_producer_contract"]
+    assert contract["legacy"] is True
+    assert contract["repository_revision"] == LEGACY_MOLTBOT_SAFE_REVISION
+    assert contract["interface_profile_version"] is None
