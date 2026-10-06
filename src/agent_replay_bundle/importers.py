@@ -515,6 +515,11 @@ def import_bounded_workflow(
             "control_plane_revision": CONTROL_PLANE_REVISION,
             "moltbot_safe_revision": (_moltbot_contract(moltbot_export)[2] if moltbot_export else None),
             "moltbot_producer_profile_version": (_moltbot_contract(moltbot_export)[1] if moltbot_export else None),
+            "moltbot_provenance": (
+                dict(moltbot_export.get("provenance") or {})
+                if moltbot_export and _moltbot_contract(moltbot_export)[1]
+                else ({"state": "legacy_unversioned", "source_asserted": None, "independently_established": None} if moltbot_export else None)
+            ),
             "manifest_revision": MANIFEST_REVISION,
             "alvorada_revision": ALVORADA_REVISION,
         },
