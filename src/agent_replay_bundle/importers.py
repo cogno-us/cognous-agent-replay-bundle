@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import datetime
 from typing import Any
 
 from .reconstruction import (
@@ -29,6 +30,16 @@ LEGACY_PROFILE = "control-plane-legacy-replay@28350065"
 BOUNDED_PROFILE = "control-plane-bounded-run@28350065"
 LEGACY_MOLTBOT_PROFILE = "moltbot-safe-envelope-0.2.0@6b0ba118"
 MOLTBOT_PROFILE = "moltbot-safe-executor-producer-1.0.0@1d308faf"
+
+
+CONTROL_PLANE_V2_REVISION = "2ea9528eeb87e14ff10f05de06473122b9df540f"
+MOLTBOT_V2_REVISION = "177354e959cc78c59c1a776f018cfbfbf28c927b"
+BOUNDED_V2_PROFILE = "control-plane-bounded-run@2ea9528e"
+MOLTBOT_V2_PROFILE = "moltbot-safe-executor-producer-2.0.0@177354e9"
+PRODUCER_COMPATIBILITY = {
+    "1.0.0": (MOLTBOT_SAFE_REVISION, CONTROL_PLANE_REVISION, MOLTBOT_PROFILE),
+    "2.0.0": (MOLTBOT_V2_REVISION, CONTROL_PLANE_V2_REVISION, MOLTBOT_V2_PROFILE),
+}
 
 
 class ImportContractError(ValueError):
@@ -248,6 +259,9 @@ def import_legacy_control_plane_replay(source: dict[str, Any]) -> Reconstruction
 def _moltbot_contract(source: dict[str, Any]) -> dict[str, Any]:
     declared = source.get("producer_profile")
     if declared is None:
+        repository = source.get("repository")
+        if repository is not None and _obj(repository, "legacy.repository").get("revision") != LEGACY_MOLTBOT_SAFE_REVISION:
+            raise ImportContractError("unsupported legacy executor repository revision")
         return {
             "profile_id": LEGACY_MOLTBOT_PROFILE,
             "repository_revision": LEGACY_MOLTBOT_SAFE_REVISION,
@@ -263,13 +277,15 @@ def _moltbot_contract(source: dict[str, Any]) -> dict[str, Any]:
     declared = _obj(declared, "moltbot_export.producer_profile")
     if declared.get("profile_id") != MOLTBOT_PRODUCER_PROFILE_ID:
         raise ImportContractError("unsupported Moltbot executor producer profile id")
-    if declared.get("profile_version") != MOLTBOT_PRODUCER_PROFILE_VERSION:
+    version = declared.get("profile_version")
+    if not isinstance(version, str) or version not in PRODUCER_COMPATIBILITY:
         raise ImportContractError("unsupported Moltbot executor producer profile version")
     if declared.get("execution_envelope_version") != "0.2.0":
         raise ImportContractError("unsupported Moltbot producer execution envelope version")
     repository = _obj(source.get("repository"), "moltbot_export.repository")
     revision = repository.get("revision")
-    if revision != MOLTBOT_SAFE_REVISION:
+    supported_revision, cp_revision, profile = PRODUCER_COMPATIBILITY[version]
+    if revision != supported_revision:
         raise ImportContractError("unsupported Moltbot producer repository revision")
     if repository.get("revision_status") not in {"source_asserted", "unavailable"}:
         raise ImportContractError("unsupported Moltbot repository revision status")
@@ -282,15 +298,16 @@ def _moltbot_contract(source: dict[str, Any]) -> dict[str, Any]:
         raise ImportContractError("Moltbot independently_established provenance must be an array")
     if asserted.get("producer_profile_id") != MOLTBOT_PRODUCER_PROFILE_ID:
         raise ImportContractError("Moltbot provenance profile id contradicts producer profile")
-    if asserted.get("producer_profile_version") != MOLTBOT_PRODUCER_PROFILE_VERSION:
+    if asserted.get("producer_profile_version") != version:
         raise ImportContractError("Moltbot provenance profile version contradicts producer profile")
     if asserted.get("repository_revision") != revision:
         raise ImportContractError("Moltbot provenance repository revision contradicts repository assertion")
     return {
-        "profile_id": MOLTBOT_PROFILE,
+        "profile_id": profile,
+        "control_plane_revision": cp_revision,
         "repository_revision": revision,
         "interface_profile_id": MOLTBOT_PRODUCER_PROFILE_ID,
-        "interface_profile_version": MOLTBOT_PRODUCER_PROFILE_VERSION,
+        "interface_profile_version": version,
         "provenance": {
             "mode": "versioned_profile",
             "source_asserted": asserted,
@@ -304,9 +321,21 @@ def import_bounded_workflow(
     *,
     proposal: dict[str, Any] | None = None,
     moltbot_export: dict[str, Any] | None = None,
+    control_plane_revision: str = CONTROL_PLANE_REVISION,
 ) -> ReconstructionBundle:
     """Import bounded Control Plane events and optional Moltbot destination evidence."""
+    if control_plane_revision not in {CONTROL_PLANE_REVISION, CONTROL_PLANE_V2_REVISION}:
+        raise ImportContractError("unsupported Control Plane revision")
+    repaired = control_plane_revision == CONTROL_PLANE_V2_REVISION
+    bounded_profile = BOUNDED_V2_PROFILE if repaired else BOUNDED_PROFILE
+    if moltbot_export is not None:
+        contract = _moltbot_contract(moltbot_export)
+        expected_cp = contract.get("control_plane_revision", CONTROL_PLANE_REVISION)
+        if expected_cp != control_plane_revision:
+            raise ImportContractError("unsupported executor/Control Plane revision combination")
     cp = _obj(control_plane_record, "control_plane_record")
+    if repaired:
+        _validate_repaired_run(cp)
     required = {"run_id", "decisions", "attempts", "observations", "reconciliations"}
     missing = sorted(required - set(cp))
     if missing:
@@ -316,8 +345,8 @@ def import_bounded_workflow(
         raise ImportContractError("run_id must be a non-empty string")
 
     report = ImportReport(
-        adapter_profile=BOUNDED_PROFILE,
-        source_revision=CONTROL_PLANE_REVISION,
+        adapter_profile=bounded_profile,
+        source_revision=control_plane_revision,
         complete=True,
         field_mappings={
             "decisions": "records[runtime_decision]",
@@ -343,7 +372,7 @@ def import_bounded_workflow(
         if p.get("run_id") not in (None, run_id):
             raise ImportContractError("proposal.run_id conflicts with bounded run_id")
         prec = _record(
-            BOUNDED_PROFILE, "runtime_proposal", seq, "proposal", p,
+            bounded_profile, "runtime_proposal", seq, "proposal", p,
             ids={
                 "run_id": p.get("run_id") or run_id,
                 "correlation_id": p.get("correlation_id"),
@@ -393,7 +422,7 @@ def import_bounded_workflow(
                 "authority_context_instance_id": binding.get("authority_context_id"),
                 "requirement_id": binding.get("requirement_id"),
             })
-        rec = _record(BOUNDED_PROFILE, "runtime_decision", seq, f"decisions[{i}]", raw,
+        rec = _record(bounded_profile, "runtime_decision", seq, f"decisions[{i}]", raw,
                       ids=ids, at=raw.get("decided_at"))
         records.append(rec)
         seq += 1
@@ -460,7 +489,7 @@ def import_bounded_workflow(
         invariant = {k: raw.get(k) for k in ("attempt_id", "effect_id", "decision_id", "started_at")}
         _unique_or_same(attempt_invariants, aid, invariant, "attempt_id")
         records.append(_record(
-            BOUNDED_PROFILE, "control_plane_attempt_transition", seq, f"attempts[{i}]", raw,
+            bounded_profile, "control_plane_attempt_transition", seq, f"attempts[{i}]", raw,
             ids={"run_id": run_id, "attempt_id": aid, "effect_id": raw.get("effect_id"),
                  "decision_id": raw.get("decision_id")},
             at=raw.get("started_at"),
@@ -476,7 +505,7 @@ def import_bounded_workflow(
             eid = raw.get("effect_id")
             if eid not in known_effects:
                 raise ImportContractError(f"{field}[{i}] has dangling effect_id {eid}")
-            if field == "reconciliations":
+            if field == "reconciliations" and not repaired:
                 embedded = _obj(raw.get("observation"), f"{field}[{i}].observation")
                 if embedded.get("effect_id") != eid:
                     raise ImportContractError(f"{field}[{i}].observation.effect_id conflicts with enclosing effect_id")
@@ -485,7 +514,7 @@ def import_bounded_workflow(
                 if raw.get("result") == "safe_to_retry" and embedded.get("state") != "absent":
                     raise ImportContractError(f"{field}[{i}] safe_to_retry conflicts with embedded observation")
             records.append(_record(
-                BOUNDED_PROFILE, kind, seq, f"{field}[{i}]", raw,
+                bounded_profile, kind, seq, f"{field}[{i}]", raw,
                 ids={"run_id": run_id, "effect_id": raw.get("effect_id")},
                 at=raw.get(time_field),
             ))
@@ -506,10 +535,10 @@ def import_bounded_workflow(
             ))
 
     profiles = [ProducerProfile(
-        profile_id=BOUNDED_PROFILE,
+        profile_id=bounded_profile,
         producer="Cognous Agent Control Plane",
         repository="cogno-us/cognous-agent-control-plane",
-        revision=CONTROL_PLANE_REVISION,
+        revision=control_plane_revision,
         format_name="BoundedRunRecord",
         format_version=None,
         notes="No embedded format version; adapter is revision-pinned.",
@@ -544,11 +573,18 @@ def import_bounded_workflow(
             value_state="absent",
         ))
 
+    if repaired and any(not r.get("observation_accepted") for r in cp["reconciliations"]):
+        report.findings.append(ImportFinding(
+            code="B020", category="value_state", severity="info",
+            path="reconciliations", value_state="unknown",
+            message="Historical rejected/unavailable observations are fully retained. This finding does not determine latest delivery state or reconstruction completeness.",
+        ))
     unresolved = any(
         r.record_type == "effect_observation" and r.data.get("state") in {"partial", "unknown"}
         for r in records
     )
-    if unresolved:
+    if unresolved and not repaired:
+        # Preserve the historical revision-selected decoder behavior.
         report.complete = False
 
     return ReconstructionBundle(
@@ -569,7 +605,8 @@ def import_bounded_workflow(
             "notes": "Replay reconstructs recorded events only; import never renews permission or creates an effect.",
         },
         metadata={
-            "control_plane_revision": CONTROL_PLANE_REVISION,
+            **({"effect_observation_history": _effect_observation_history(cp)} if repaired else {}),
+            "control_plane_revision": control_plane_revision,
             "moltbot_safe_revision": (
                 (_moltbot_contract(moltbot_export)["repository_revision"]) if moltbot_export else None
             ),
@@ -661,6 +698,20 @@ def _import_moltbot(
     result = _obj(source["execution_result"], "execution_result")
     if result.get("decision_id") != envelope_decision or result.get("effect_id") != envelope_effect:
         raise ImportContractError("Moltbot execution_result identifiers do not match execution envelope")
+    if source.get("producer_profile", {}).get("profile_version") == "2.0.0":
+        _validate_v2_export(source, cp_records, op, envelope_effect)
+        for kind, path, value in (
+            ("executor_control_plane_evidence", "control_plane_evidence", source["control_plane_evidence"]),
+            *(("rejected_executor_observation", f"rejected_observations[{i}]", item)
+              for i, item in enumerate(source["rejected_observations"])),
+        ):
+            records.append(_record(profile_id, kind, seq, "moltbot." + path, value))
+            seq += 1
+        if result.get("status") == "observed":
+            findings.append(ImportFinding(code="M020", category="unsupported_semantic",
+                severity="info", path="execution_result.observation",
+                message="Historical local observation is retained without Control Plane validation or renewed authority."))
+
     result_observation = result.get("observation")
     if isinstance(result_observation, dict) and result_observation:
         _require_equal(result_observation.get("effect_id"), envelope_effect, "execution_result.observation.effect_id")
@@ -742,7 +793,7 @@ def _import_moltbot(
             supplied_cp_by_id, aid, raw, "supplied Control Plane attempt_id"
         )
         records.append(_record(
-            BOUNDED_PROFILE,
+            owner_record.producer_profile_id,
             "moltbot_attributed_control_plane_attempt",
             seq,
             f"moltbot.control_plane_attempts[{i}]",
@@ -920,6 +971,8 @@ def _import_moltbot(
                     establishes_identity_equivalence=False,
                 ))
             else:
+                if profile_id == MOLTBOT_V2_PROFILE:
+                    raise ImportContractError("explicit executor attempt reference is dangling or ambiguous")
                 findings.append(ImportFinding(
                     code="M001",
                     category="missing_dependency",
@@ -952,3 +1005,213 @@ def _import_moltbot(
         message="At the pinned adapter this field carries the proposal profile reference; it is distinct from the Control Plane binding context-instance ID.",
     ))
     return records, links, commitments, findings
+
+
+def _accepted_repaired_observation(observation: dict[str, Any], effect: str) -> None:
+    _require_equal(observation.get('effect_id'), effect, 'accepted observation.effect_id')
+    state = observation.get('state')
+    destination = observation.get('destination_state')
+    if state in {'applied', 'partial'}:
+        destination = _obj(destination, 'accepted observation.destination_state')
+        _require_equal(destination.get('effect_id'), effect, 'accepted destination.effect_id')
+        _require_equal(destination.get('state'), state, 'accepted destination.state')
+    elif state == 'absent':
+        if destination != {}:
+            raise ImportContractError('accepted absence contains destination content')
+    else:
+        raise ImportContractError('unsupported accepted observation state')
+
+
+def _aware_time(value: Any) -> datetime:
+    try:
+        result = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        if result.tzinfo is None or result.utcoffset() is None:
+            raise ValueError('timezone missing')
+        return result
+    except (ValueError, AttributeError, TypeError) as exc:
+        raise ImportContractError('accepted observation requires timezone-aware times') from exc
+
+
+def _validate_repaired_run(cp: dict[str, Any]) -> None:
+    """Check recorded contract consistency; no authority evaluation or new observation."""
+    accepted = []
+    for raw in cp.get('reconciliations', []):
+        rec = _obj(raw, 'reconciliation')
+        if rec.get('retry_eligible') is not False:
+            raise ImportContractError('repaired reconciliation cannot establish retry eligibility')
+        if type(rec.get('observation_accepted')) is not bool:
+            raise ImportContractError('reconciliation observation_accepted must be explicit')
+        reasons = rec.get('reasons')
+        if not isinstance(reasons, list) or not all(isinstance(x, str) and x for x in reasons):
+            raise ImportContractError('reconciliation reasons must be an array of reasons')
+        observation = rec.get('observation')
+        if not rec['observation_accepted']:
+            if rec.get('result') != 'hold' or not reasons:
+                raise ImportContractError('rejected/unavailable observation must hold with reasons')
+            if observation is not None:
+                _obj(observation, 'rejected observation')
+            # Wrong-effect and malformed-time evidence remains attributed rejected
+            # content, never an identifier or accepted observation record.
+            continue
+        observation = _obj(observation, 'accepted reconciliation.observation')
+        _accepted_repaired_observation(observation, rec.get('effect_id'))
+        if reasons:
+            raise ImportContractError('accepted observation has rejection reasons')
+        maximum = rec.get('observation_max_age_seconds')
+        tolerance = rec.get('observation_clock_tolerance_seconds')
+        if type(maximum) is not int or maximum <= 0 or type(tolerance) is not int or tolerance < 0:
+            raise ImportContractError('accepted reconciliation requires explicit observation policy')
+        age = (_aware_time(rec.get('evaluation_time')) - _aware_time(observation.get('observed_at'))).total_seconds()
+        if age > maximum or age < -tolerance:
+            raise ImportContractError('accepted observation violates recorded temporal policy')
+        expected = {'applied': 'applied', 'absent': 'observed_absent', 'partial': 'hold'}[observation['state']]
+        if rec.get('result') != expected:
+            raise ImportContractError('reconciliation result contradicts accepted observation')
+        accepted.append(observation)
+    if cp.get('observations') != accepted:
+        raise ImportContractError('accepted Control Plane observations differ from retained reconciliations')
+    terminal = {}
+    for attempt in cp.get('attempts', []):
+        if attempt.get('status') != 'attempted':
+            _unique_or_same(terminal, attempt.get('attempt_id'), attempt, 'terminal Control Plane attempt')
+
+
+def _validate_v2_export(source: dict[str, Any], cp_records: list[SourceRecord],
+                        op: dict[str, Any], effect: str) -> None:
+    result = source['execution_result']
+    for field in ('control_plane_evidence', 'rejected_observations', 'observations'):
+        if field not in source:
+            raise ImportContractError('producer 2.0.0 missing ' + field)
+    evidence = _obj(source['control_plane_evidence'], 'control_plane_evidence')
+    if result.get('control_plane_evidence') != evidence:
+        raise ImportContractError('result Control Plane evidence differs from export')
+    observation = result.get('observation')
+    if observation is not None and not isinstance(observation, dict):
+        raise ImportContractError('execution observation must be object or null')
+    expected_observations = [observation] if observation else []
+    if source['observations'] != expected_observations:
+        raise ImportContractError('accepted executor observations differ from result')
+    if not observation and result.get('observed_state') != 'unknown':
+        raise ImportContractError('null observation cannot establish observed state')
+    if observation:
+        if result.get('observed_state') != observation.get('state'):
+            raise ImportContractError('execution observed-state contradiction')
+        _validate_observation_content(observation, effect, op, 'execution_result.observation')
+        if observation.get('state') in {'applied', 'partial'}:
+            _accepted_repaired_observation(observation, effect)
+    if observation is None and result.get('attempted') and result.get('status') != 'unknown':
+        raise ImportContractError('attempt without validated observation must remain unknown')
+    if result.get('newly_executed') and not source.get('effects'):
+        raise ImportContractError('new effect claim lacks retained destination row')
+    if result.get('observed_state') in {'applied', 'partial'}:
+        if not source.get('effects') or any(row.get('state') != result['observed_state'] for row in source['effects']):
+            raise ImportContractError('observed state contradicts retained destination state')
+    cp_observations = [r.data for r in cp_records if r.record_type == 'effect_observation']
+    # Do not weaken operation binding for accepted upstream observations.
+    for item in cp_observations:
+        _validate_observation_content(item, effect, op, 'control_plane.observations')
+    rec = evidence.get('reconciliation')
+    attempt = evidence.get('attempt')
+    supplied_attempts = source.get('control_plane_attempts')
+    if not isinstance(supplied_attempts, list):
+        raise ImportContractError('control_plane_attempts must be an array')
+    if supplied_attempts != ([attempt] if attempt else []):
+        raise ImportContractError('Control Plane attempts differ from result owning evidence')
+    if rec is not None:
+        rec = _obj(rec, 'executor reconciliation')
+        if rec.get('effect_id') != effect:
+            raise ImportContractError('enclosing reconciliation effect identity mismatch')
+        retained = [r.data for r in cp_records if r.record_type == 'reconciliation']
+        if rec not in retained:
+            raise ImportContractError('executor reconciliation has no matching retained Control Plane record')
+        if rec.get('retry_eligible') is not False:
+            raise ImportContractError('unsupported retry eligibility')
+        rejected = [rec['observation']] if not rec['observation_accepted'] and rec.get('observation') is not None else []
+        if source['rejected_observations'] != rejected:
+            raise ImportContractError('rejected observations differ from retained reconciliation')
+        if observation and (not rec['observation_accepted'] or rec.get('observation') != observation):
+            raise ImportContractError('rejected/substituted evidence promoted to accepted observation')
+        if result.get('attempted') and rec['observation_accepted'] and observation != rec.get('observation'):
+            raise ImportContractError('accepted reconciliation observation missing from attempted result')
+        if not rec['observation_accepted'] and result.get('observed_state') != 'unknown':
+            raise ImportContractError('rejected observation cannot establish observed state')
+    elif source['rejected_observations']:
+        raise ImportContractError('rejected evidence has no enclosing reconciliation')
+    if result.get('attempted'):
+        if not attempt or rec is None or not result.get('attempt_id'):
+            raise ImportContractError('attempted execution lacks owning attempt/reconciliation')
+    elif result.get('acknowledged') or result.get('newly_executed'):
+        raise ImportContractError('non-attempted result cannot acknowledge or execute')
+    if result.get('status') == 'observed' and evidence:
+        raise ImportContractError('historical local observation cannot claim CP validation')
+    if attempt:
+        did = source['execution_envelope']['decision_id']
+        if attempt.get('effect_id') != effect or attempt.get('decision_id') != did:
+            raise ImportContractError('Control Plane attempt enclosing identity mismatch')
+        owner = [r.data for r in cp_records if r.record_type == 'control_plane_attempt_transition']
+        if attempt not in owner:
+            raise ImportContractError('attempt has no matching owning Control Plane record')
+        primary = source.get('attempt_identity') or {}
+        ack = attempt.get('acknowledgement') or {}
+        if primary.get('namespace') == 'executor':
+            if ack.get('attempt_id') is not None and ack['attempt_id'] != primary.get('attempt_id'):
+                raise ImportContractError('acknowledgement executor attempt mismatch')
+            if result.get('acknowledged') and ack.get('attempt_id') != result.get('attempt_id'):
+                raise ImportContractError('acknowledged executor result lacks explicit attempt link')
+        elif primary.get('namespace') == 'control_plane' and primary.get('attempt_id') != attempt.get('attempt_id'):
+            raise ImportContractError('primary Control Plane attempt identity mismatch')
+        if result.get('acknowledged') != (attempt.get('status') in {'acknowledged', 'partial'}):
+            # A reconciled partial result has no acknowledgement in the executor's
+            # public mapping, despite the retained CP partial lifecycle status.
+            if not (primary.get('namespace') == 'control_plane' and attempt.get('status') == 'partial' and result.get('acknowledged') is False):
+                raise ImportContractError('acknowledgement claim contradicts owning attempt')
+        if result.get('newly_executed') and ack.get('newly_executed') is not True:
+            raise ImportContractError('new effect claim lacks producer acknowledgement')
+
+
+def _effect_observation_history(cp: dict[str, Any]) -> dict[str, Any]:
+    """Summarize each effect using only its owning producer's array order.
+
+    Reconciliations and attempts are independent sequences, not a merged clock.
+    No latest-at-import-time claim or ordering of historical local observations
+    relative to Control Plane observations is established.
+    """
+    effects = {}
+    for decision in cp["decisions"]:
+        effect = decision.get("effect_id")
+        if effect is not None:
+            effects.setdefault(effect, {
+                "basis": "Control Plane reconciliation array order, filtered by exact effect_id",
+                "rejected_reconciliation_indices": [],
+                "latest_reconciliation": None,
+                "latest_accepted_observation": None,
+                "latest_supported_destination_state": "unknown",
+                "retry_eligible": None,
+                "acknowledgement_history": [],
+                "cross_sequence_order": "not_established",
+                "freshness_at_import": "not_evaluated",
+            })
+    for index, rec in enumerate(cp["reconciliations"]):
+        value = effects[rec["effect_id"]]
+        value["latest_reconciliation"] = {
+            "source_index": index, "result": rec["result"],
+            "observation_accepted": rec["observation_accepted"],
+        }
+        value["retry_eligible"] = rec["retry_eligible"]
+        if rec["observation_accepted"]:
+            value["latest_accepted_observation"] = {
+                "source_index": index, "observation": rec["observation"],
+            }
+            value["latest_supported_destination_state"] = rec["observation"]["state"]
+        else:
+            value["rejected_reconciliation_indices"].append(index)
+            # An older accepted observation is retained separately; a subsequent
+            # rejected observation does not establish current destination state.
+            value["latest_supported_destination_state"] = "unknown"
+    for index, attempt in enumerate(cp["attempts"]):
+        effects[attempt["effect_id"]]["acknowledgement_history"].append({
+            "source_index": index, "attempt_id": attempt["attempt_id"],
+            "status": attempt["status"],
+            "acknowledgement": attempt.get("acknowledgement"),
+        })
+    return effects

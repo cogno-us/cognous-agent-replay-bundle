@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added explicit executor producer 2.0.0 / repaired Control Plane revision compatibility without relabeling legacy evidence.
+- Preserved null and rejected observations, owning attempt records and observed-absence semantics in Reconstruction Bundle 0.2.0.
+- Added real-producer qualification, generated examples and adversarial owner-record/assurance checks.
+
 - Hardened bounded import with proposal -> decision -> envelope -> destination cross-record validation.
 - Added namespace-aware execution-result attempt resolution and embedded observation/reconciliation checks.
 - Rejects multiple authorization bindings in the single-proposal importer instead of forcing a match.
