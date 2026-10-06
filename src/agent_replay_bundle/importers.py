@@ -574,17 +574,17 @@ def import_bounded_workflow(
         ))
 
     if repaired and any(not r.get("observation_accepted") for r in cp["reconciliations"]):
-        report.complete = False
         report.findings.append(ImportFinding(
-            code="B020", category="value_state", severity="warning",
+            code="B020", category="value_state", severity="info",
             path="reconciliations", value_state="unknown",
-            message="Rejected/unavailable observation retained; delivery remains unresolved, with no retry permission.",
+            message="Historical rejected/unavailable observations are fully retained. This finding does not determine latest delivery state or reconstruction completeness.",
         ))
     unresolved = any(
         r.record_type == "effect_observation" and r.data.get("state") in {"partial", "unknown"}
         for r in records
     )
-    if unresolved:
+    if unresolved and not repaired:
+        # Preserve the historical revision-selected decoder behavior.
         report.complete = False
 
     return ReconstructionBundle(
@@ -605,6 +605,7 @@ def import_bounded_workflow(
             "notes": "Replay reconstructs recorded events only; import never renews permission or creates an effect.",
         },
         metadata={
+            **({"effect_observation_history": _effect_observation_history(cp)} if repaired else {}),
             "control_plane_revision": control_plane_revision,
             "moltbot_safe_revision": (
                 (_moltbot_contract(moltbot_export)["repository_revision"]) if moltbot_export else None
@@ -1166,3 +1167,51 @@ def _validate_v2_export(source: dict[str, Any], cp_records: list[SourceRecord],
                 raise ImportContractError('acknowledgement claim contradicts owning attempt')
         if result.get('newly_executed') and ack.get('newly_executed') is not True:
             raise ImportContractError('new effect claim lacks producer acknowledgement')
+
+
+def _effect_observation_history(cp: dict[str, Any]) -> dict[str, Any]:
+    """Summarize each effect using only its owning producer's array order.
+
+    Reconciliations and attempts are independent sequences, not a merged clock.
+    No latest-at-import-time claim or ordering of historical local observations
+    relative to Control Plane observations is established.
+    """
+    effects = {}
+    for decision in cp["decisions"]:
+        effect = decision.get("effect_id")
+        if effect is not None:
+            effects.setdefault(effect, {
+                "basis": "Control Plane reconciliation array order, filtered by exact effect_id",
+                "rejected_reconciliation_indices": [],
+                "latest_reconciliation": None,
+                "latest_accepted_observation": None,
+                "latest_supported_destination_state": "unknown",
+                "retry_eligible": None,
+                "acknowledgement_history": [],
+                "cross_sequence_order": "not_established",
+                "freshness_at_import": "not_evaluated",
+            })
+    for index, rec in enumerate(cp["reconciliations"]):
+        value = effects[rec["effect_id"]]
+        value["latest_reconciliation"] = {
+            "source_index": index, "result": rec["result"],
+            "observation_accepted": rec["observation_accepted"],
+        }
+        value["retry_eligible"] = rec["retry_eligible"]
+        if rec["observation_accepted"]:
+            value["latest_accepted_observation"] = {
+                "source_index": index, "observation": rec["observation"],
+            }
+            value["latest_supported_destination_state"] = rec["observation"]["state"]
+        else:
+            value["rejected_reconciliation_indices"].append(index)
+            # An older accepted observation is retained separately; a subsequent
+            # rejected observation does not establish current destination state.
+            value["latest_supported_destination_state"] = "unknown"
+    for index, attempt in enumerate(cp["attempts"]):
+        effects[attempt["effect_id"]]["acknowledgement_history"].append({
+            "source_index": index, "attempt_id": attempt["attempt_id"],
+            "status": attempt["status"],
+            "acknowledgement": attempt.get("acknowledgement"),
+        })
+    return effects

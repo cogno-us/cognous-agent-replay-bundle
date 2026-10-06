@@ -43,7 +43,7 @@ def main(output: Path):
     output.mkdir(parents=True, exist_ok=True)
     cases, summaries = {}, {}
     for name in ('success', 'rejected_wrong_effect', 'rejected_stale', 'rejected_malformed',
-                 'rejected_contradictory', 'unavailable', 'restart', 'lost_ack', 'partial',
+                 'rejected_contradictory', 'unavailable', 'restart', 'rejected_restart', 'lost_ack', 'partial',
                  'prior_absence', 'denied', 'historical_applied', 'historical_absent'):
         with tempfile.TemporaryDirectory() as state:
             h,p,resolver,w,d,dest,e,request = helpers._integrated(Path(state))
@@ -55,7 +55,7 @@ def main(output: Path):
                 if adapter.outcome.result is not None:
                     if name in {'unavailable', 'restart'}:
                         raise OSError('synthetic unavailable post-dispatch observation')
-                    if name == 'rejected_wrong_effect':
+                    if name in {'rejected_wrong_effect', 'rejected_restart'}:
                         observation.effect_id = 'rejected-unrelated-effect'
                     elif name == 'rejected_stale':
                         observation.observed_at = (h.NOW - h.timedelta(seconds=61)).isoformat()
@@ -80,7 +80,7 @@ def main(output: Path):
                 with patch.object(ControlPlaneRefundDestinationAdapter, 'observe', fault):
                     result = e.execute(envelope=request, proposal=p, decision=d, now=h.NOW,
                                        simulate=name if name in {'lost_ack', 'partial'} else None)
-                if name == 'restart':
+                if name in {'restart', 'rejected_restart'}:
                     assert result.observation is None and result.acknowledged
                     w.records = h.BoundedRecordStore(w.records.path, w.records.run_id)
                     dest = DurableRefundDestination(dest.root)
@@ -126,6 +126,8 @@ def main(output: Path):
                 'attempt_identity': m['attempt_identity'], 'effect_count_before_import': count,
                 'effect_count_after_import': count, 'destination': before_import,
                 'status': result.status, 'observed_state': result.observed_state,
+                'reconstruction_status': bundle.status,
+                'effect_observation_history': bundle.metadata['effect_observation_history'],
                 'acknowledged': result.acknowledged, 'newly_executed': result.newly_executed,
                 'records_unchanged': True,
                 'executor_attempt_count': len(m['attempts']),
@@ -135,7 +137,7 @@ def main(output: Path):
                 'bundle_digest': content_digest(bundle).value,
                 'classification': 'required_safety_invariant_pass',
             }
-            if name in {'success', 'rejected_wrong_effect', 'unavailable', 'prior_absence'}:
+            if name in {'success', 'rejected_wrong_effect', 'unavailable', 'prior_absence', 'restart'}:
                 (output / f'producer_v2_{name}.json').write_text(bundle.model_dump_json(indent=2) + '\n')
     (output / 'producer_v2_sources.json').write_text(json.dumps(cases, indent=2) + '\n')
     (output / 'producer_v2_results.json').write_text(json.dumps({

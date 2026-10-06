@@ -1,9 +1,9 @@
 {
-  "bundle_id": "4ce6c452-d237-4e92-a780-520311a135c2",
+  "bundle_id": "b6ab5cc6-50c0-49f5-a20e-d5407b5eb75c",
   "bundle_version": "0.2.0",
   "run_id": "run-1",
   "status": "reconstruction_complete",
-  "generated_at": "2026-10-06T23:03:43.849965+00:00",
+  "generated_at": "2026-10-06T23:03:43.893595+00:00",
   "producer_profiles": [
     {
       "profile_id": "control-plane-bounded-run@2ea9528e",
@@ -85,7 +85,7 @@
       "recorded_at": "2026-10-05T19:00:00+00:00",
       "identifiers": {
         "run_id": "run-1",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
         "manifest_id": "refund-integration-pilot-v1",
         "action_id": "urn:cognous:action:refund-issue-routine-v1",
@@ -96,7 +96,7 @@
       },
       "evidence_class": "producer_reported",
       "data": {
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
         "result": "authorized",
         "reasons": [],
@@ -146,15 +146,15 @@
       "recorded_at": "2026-10-05T19:00:00+00:00",
       "identifiers": {
         "run_id": "run-1",
-        "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
+        "attempt_id": "fb793fc3-009a-469c-a038-970de996e5f1",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528"
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
+        "attempt_id": "fb793fc3-009a-469c-a038-970de996e5f1",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "started_at": "2026-10-05T19:00:00+00:00",
         "status": "attempted",
         "acknowledgement": {},
@@ -170,20 +170,20 @@
       "recorded_at": "2026-10-05T19:00:00+00:00",
       "identifiers": {
         "run_id": "run-1",
-        "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
+        "attempt_id": "fb793fc3-009a-469c-a038-970de996e5f1",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528"
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
+        "attempt_id": "fb793fc3-009a-469c-a038-970de996e5f1",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "started_at": "2026-10-05T19:00:00+00:00",
         "status": "acknowledged",
         "acknowledgement": {
           "moltbot_safe_status": "executed",
-          "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
+          "attempt_id": "dffa5d12-a744-4c0b-992f-847f1dd005cc",
           "newly_executed": true,
           "observation": {
             "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
@@ -207,10 +207,36 @@
       }
     },
     {
-      "record_id": "control-plane-bounded-run@2ea9528e:effect_observation:4",
+      "record_id": "control-plane-bounded-run@2ea9528e:control_plane_attempt_transition:4",
+      "producer_profile_id": "control-plane-bounded-run@2ea9528e",
+      "record_type": "control_plane_attempt_transition",
+      "source_sequence": 4,
+      "source_path": "attempts[2]",
+      "recorded_at": "2026-10-05T19:00:00+00:00",
+      "identifiers": {
+        "run_id": "run-1",
+        "attempt_id": "ec5ef7e0-8287-40b2-ba22-16e065142346",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845"
+      },
+      "evidence_class": "producer_reported",
+      "data": {
+        "attempt_id": "ec5ef7e0-8287-40b2-ba22-16e065142346",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
+        "started_at": "2026-10-05T19:00:00+00:00",
+        "status": "acknowledged",
+        "acknowledgement": {
+          "reconciled_existing": true
+        },
+        "error": null
+      }
+    },
+    {
+      "record_id": "control-plane-bounded-run@2ea9528e:effect_observation:5",
       "producer_profile_id": "control-plane-bounded-run@2ea9528e",
       "record_type": "effect_observation",
-      "source_sequence": 4,
+      "source_sequence": 5,
       "source_path": "observations[0]",
       "recorded_at": "2026-10-05T19:00:00+00:00",
       "identifiers": {
@@ -226,12 +252,12 @@
       }
     },
     {
-      "record_id": "control-plane-bounded-run@2ea9528e:reconciliation:5",
+      "record_id": "control-plane-bounded-run@2ea9528e:effect_observation:6",
       "producer_profile_id": "control-plane-bounded-run@2ea9528e",
-      "record_type": "reconciliation",
-      "source_sequence": 5,
-      "source_path": "reconciliations[0]",
-      "recorded_at": "2026-10-06T23:03:43.845861+00:00",
+      "record_type": "effect_observation",
+      "source_sequence": 6,
+      "source_path": "observations[1]",
+      "recorded_at": "2026-10-05T19:00:00+00:00",
       "identifiers": {
         "run_id": "run-1",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829"
@@ -239,7 +265,38 @@
       "evidence_class": "producer_reported",
       "data": {
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "reconciled_at": "2026-10-06T23:03:43.845861+00:00",
+        "observed_at": "2026-10-05T19:00:00+00:00",
+        "state": "applied",
+        "destination_state": {
+          "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+          "state": "applied",
+          "grant_id": "urn:cognous:grant:routine-1",
+          "target": "urn:cognous:synthetic-account:customer-001",
+          "amount": 50.0,
+          "unit": "USD",
+          "payload": {
+            "customer_id": "customer-001",
+            "refund_reason": "duplicate"
+          },
+          "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
+        }
+      }
+    },
+    {
+      "record_id": "control-plane-bounded-run@2ea9528e:reconciliation:7",
+      "producer_profile_id": "control-plane-bounded-run@2ea9528e",
+      "record_type": "reconciliation",
+      "source_sequence": 7,
+      "source_path": "reconciliations[0]",
+      "recorded_at": "2026-10-06T23:03:43.888020+00:00",
+      "identifiers": {
+        "run_id": "run-1",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829"
+      },
+      "evidence_class": "producer_reported",
+      "data": {
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "reconciled_at": "2026-10-06T23:03:43.888020+00:00",
         "result": "observed_absent",
         "observation": {
           "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
@@ -256,12 +313,12 @@
       }
     },
     {
-      "record_id": "control-plane-bounded-run@2ea9528e:reconciliation:6",
+      "record_id": "control-plane-bounded-run@2ea9528e:reconciliation:8",
       "producer_profile_id": "control-plane-bounded-run@2ea9528e",
       "record_type": "reconciliation",
-      "source_sequence": 6,
+      "source_sequence": 8,
       "source_path": "reconciliations[1]",
-      "recorded_at": "2026-10-06T23:03:43.847716+00:00",
+      "recorded_at": "2026-10-06T23:03:43.889488+00:00",
       "identifiers": {
         "run_id": "run-1",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829"
@@ -269,10 +326,37 @@
       "evidence_class": "producer_reported",
       "data": {
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "reconciled_at": "2026-10-06T23:03:43.847716+00:00",
+        "reconciled_at": "2026-10-06T23:03:43.889488+00:00",
         "result": "hold",
+        "observation": null,
+        "observation_accepted": false,
+        "retry_eligible": false,
+        "reasons": [
+          "observation_unavailable:OSError"
+        ],
+        "evaluation_time": "2026-10-05T19:00:00+00:00",
+        "observation_max_age_seconds": 60,
+        "observation_clock_tolerance_seconds": 5
+      }
+    },
+    {
+      "record_id": "control-plane-bounded-run@2ea9528e:reconciliation:9",
+      "producer_profile_id": "control-plane-bounded-run@2ea9528e",
+      "record_type": "reconciliation",
+      "source_sequence": 9,
+      "source_path": "reconciliations[2]",
+      "recorded_at": "2026-10-06T23:03:43.891089+00:00",
+      "identifiers": {
+        "run_id": "run-1",
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829"
+      },
+      "evidence_class": "producer_reported",
+      "data": {
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "reconciled_at": "2026-10-06T23:03:43.891089+00:00",
+        "result": "applied",
         "observation": {
-          "effect_id": "rejected-unrelated-effect",
+          "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
           "observed_at": "2026-10-05T19:00:00+00:00",
           "state": "applied",
           "destination_state": {
@@ -289,25 +373,23 @@
             "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
           }
         },
-        "observation_accepted": false,
+        "observation_accepted": true,
         "retry_eligible": false,
-        "reasons": [
-          "observation_effect_id_mismatch"
-        ],
+        "reasons": [],
         "evaluation_time": "2026-10-05T19:00:00+00:00",
         "observation_max_age_seconds": 60,
         "observation_clock_tolerance_seconds": 5
       }
     },
     {
-      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:execution_envelope:7",
+      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:execution_envelope:10",
       "producer_profile_id": "moltbot-safe-executor-producer-2.0.0@177354e9",
       "record_type": "execution_envelope",
-      "source_sequence": 7,
+      "source_sequence": 10,
       "source_path": "moltbot.execution_envelope",
       "recorded_at": null,
       "identifiers": {
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
         "manifest_id": "refund-integration-pilot-v1",
         "action_id": "urn:cognous:action:refund-issue-routine-v1",
@@ -320,7 +402,7 @@
       "evidence_class": "producer_reported",
       "data": {
         "version": "0.2.0",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
         "operation": {
           "actor": "urn:cognous:identity:refund-agent-1",
@@ -355,51 +437,32 @@
       }
     },
     {
-      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:executor_control_plane_evidence:8",
+      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:executor_control_plane_evidence:11",
       "producer_profile_id": "moltbot-safe-executor-producer-2.0.0@177354e9",
       "record_type": "executor_control_plane_evidence",
-      "source_sequence": 8,
+      "source_sequence": 11,
       "source_path": "moltbot.control_plane_evidence",
       "recorded_at": null,
       "identifiers": {},
       "evidence_class": "producer_reported",
       "data": {
         "attempt": {
-          "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
+          "attempt_id": "ec5ef7e0-8287-40b2-ba22-16e065142346",
           "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-          "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+          "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
           "started_at": "2026-10-05T19:00:00+00:00",
           "status": "acknowledged",
           "acknowledgement": {
-            "moltbot_safe_status": "executed",
-            "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
-            "newly_executed": true,
-            "observation": {
-              "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-              "state": "applied",
-              "destination_state": {
-                "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-                "state": "applied",
-                "grant_id": "urn:cognous:grant:routine-1",
-                "target": "urn:cognous:synthetic-account:customer-001",
-                "amount": 50.0,
-                "unit": "USD",
-                "payload": {
-                  "customer_id": "customer-001",
-                  "refund_reason": "duplicate"
-                },
-                "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
-              }
-            }
+            "reconciled_existing": true
           },
           "error": null
         },
         "reconciliation": {
           "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-          "reconciled_at": "2026-10-06T23:03:43.847716+00:00",
-          "result": "hold",
+          "reconciled_at": "2026-10-06T23:03:43.891089+00:00",
+          "result": "applied",
           "observation": {
-            "effect_id": "rejected-unrelated-effect",
+            "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
             "observed_at": "2026-10-05T19:00:00+00:00",
             "state": "applied",
             "destination_state": {
@@ -416,11 +479,9 @@
               "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
             }
           },
-          "observation_accepted": false,
+          "observation_accepted": true,
           "retry_eligible": false,
-          "reasons": [
-            "observation_effect_id_mismatch"
-          ],
+          "reasons": [],
           "evaluation_time": "2026-10-05T19:00:00+00:00",
           "observation_max_age_seconds": 60,
           "observation_clock_tolerance_seconds": 5
@@ -428,94 +489,64 @@
       }
     },
     {
-      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:rejected_executor_observation:9",
-      "producer_profile_id": "moltbot-safe-executor-producer-2.0.0@177354e9",
-      "record_type": "rejected_executor_observation",
-      "source_sequence": 9,
-      "source_path": "moltbot.rejected_observations[0]",
-      "recorded_at": null,
-      "identifiers": {},
-      "evidence_class": "producer_reported",
-      "data": {
-        "effect_id": "rejected-unrelated-effect",
-        "observed_at": "2026-10-05T19:00:00+00:00",
-        "state": "applied",
-        "destination_state": {
-          "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-          "state": "applied",
-          "grant_id": "urn:cognous:grant:routine-1",
-          "target": "urn:cognous:synthetic-account:customer-001",
-          "amount": 50.0,
-          "unit": "USD",
-          "payload": {
-            "customer_id": "customer-001",
-            "refund_reason": "duplicate"
-          },
-          "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
-        }
-      }
-    },
-    {
-      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:execution_result:10",
+      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:execution_result:12",
       "producer_profile_id": "moltbot-safe-executor-producer-2.0.0@177354e9",
       "record_type": "execution_result",
-      "source_sequence": 10,
+      "source_sequence": 12,
       "source_path": "moltbot.execution_result",
       "recorded_at": null,
       "identifiers": {
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d"
+        "attempt_id": "ec5ef7e0-8287-40b2-ba22-16e065142346"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "status": "unknown",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "status": "reconciled",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
+        "attempt_id": "ec5ef7e0-8287-40b2-ba22-16e065142346",
         "attempted": true,
         "acknowledged": true,
-        "observed_state": "unknown",
-        "newly_executed": true,
-        "observation": null,
-        "error": "observation_effect_id_mismatch",
+        "observed_state": "applied",
+        "newly_executed": false,
+        "observation": {
+          "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+          "observed_at": "2026-10-05T19:00:00+00:00",
+          "state": "applied",
+          "destination_state": {
+            "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+            "state": "applied",
+            "grant_id": "urn:cognous:grant:routine-1",
+            "target": "urn:cognous:synthetic-account:customer-001",
+            "amount": 50.0,
+            "unit": "USD",
+            "payload": {
+              "customer_id": "customer-001",
+              "refund_reason": "duplicate"
+            },
+            "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
+          }
+        },
+        "error": null,
         "control_plane_evidence": {
           "attempt": {
-            "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
+            "attempt_id": "ec5ef7e0-8287-40b2-ba22-16e065142346",
             "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-            "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+            "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
             "started_at": "2026-10-05T19:00:00+00:00",
             "status": "acknowledged",
             "acknowledgement": {
-              "moltbot_safe_status": "executed",
-              "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
-              "newly_executed": true,
-              "observation": {
-                "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-                "state": "applied",
-                "destination_state": {
-                  "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-                  "state": "applied",
-                  "grant_id": "urn:cognous:grant:routine-1",
-                  "target": "urn:cognous:synthetic-account:customer-001",
-                  "amount": 50.0,
-                  "unit": "USD",
-                  "payload": {
-                    "customer_id": "customer-001",
-                    "refund_reason": "duplicate"
-                  },
-                  "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
-                }
-              }
+              "reconciled_existing": true
             },
             "error": null
           },
           "reconciliation": {
             "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-            "reconciled_at": "2026-10-06T23:03:43.847716+00:00",
-            "result": "hold",
+            "reconciled_at": "2026-10-06T23:03:43.891089+00:00",
+            "result": "applied",
             "observation": {
-              "effect_id": "rejected-unrelated-effect",
+              "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
               "observed_at": "2026-10-05T19:00:00+00:00",
               "state": "applied",
               "destination_state": {
@@ -532,11 +563,9 @@
                 "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
               }
             },
-            "observation_accepted": false,
+            "observation_accepted": true,
             "retry_eligible": false,
-            "reasons": [
-              "observation_effect_id_mismatch"
-            ],
+            "reasons": [],
             "evaluation_time": "2026-10-05T19:00:00+00:00",
             "observation_max_age_seconds": 60,
             "observation_clock_tolerance_seconds": 5
@@ -545,120 +574,101 @@
       }
     },
     {
-      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_attempt:11",
+      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_attempt:13",
       "producer_profile_id": "moltbot-safe-executor-producer-2.0.0@177354e9",
       "record_type": "destination_attempt",
-      "source_sequence": 11,
+      "source_sequence": 13,
       "source_path": "moltbot.attempts[0]",
       "recorded_at": null,
       "identifiers": {
-        "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
+        "attempt_id": "dffa5d12-a744-4c0b-992f-847f1dd005cc",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528"
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
+        "attempt_id": "dffa5d12-a744-4c0b-992f-847f1dd005cc",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175",
-        "created_at": 1791327823.846425
+        "created_at": 1791327823.8885102
       }
     },
     {
-      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_attempt_event:12",
+      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_attempt_event:14",
       "producer_profile_id": "moltbot-safe-executor-producer-2.0.0@177354e9",
       "record_type": "destination_attempt_event",
-      "source_sequence": 12,
+      "source_sequence": 14,
       "source_path": "moltbot.attempt_events[0]",
       "recorded_at": null,
       "identifiers": {
-        "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
+        "attempt_id": "dffa5d12-a744-4c0b-992f-847f1dd005cc",
         "event_id": "1",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528"
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845"
       },
       "evidence_class": "producer_reported",
       "data": {
         "event_id": 1,
-        "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
+        "attempt_id": "dffa5d12-a744-4c0b-992f-847f1dd005cc",
         "status": "attempted",
         "error": null,
-        "created_at": 1791327823.8465009
+        "created_at": 1791327823.8886073
       }
     },
     {
-      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_attempt_event:13",
+      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_attempt_event:15",
       "producer_profile_id": "moltbot-safe-executor-producer-2.0.0@177354e9",
       "record_type": "destination_attempt_event",
-      "source_sequence": 13,
+      "source_sequence": 15,
       "source_path": "moltbot.attempt_events[1]",
       "recorded_at": null,
       "identifiers": {
-        "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
+        "attempt_id": "dffa5d12-a744-4c0b-992f-847f1dd005cc",
         "event_id": "2",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528"
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845"
       },
       "evidence_class": "producer_reported",
       "data": {
         "event_id": 2,
-        "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
+        "attempt_id": "dffa5d12-a744-4c0b-992f-847f1dd005cc",
         "status": "executed",
         "error": null,
-        "created_at": 1791327823.8469675
+        "created_at": 1791327823.889106
       }
     },
     {
-      "record_id": "control-plane-bounded-run@2ea9528e:moltbot_attributed_control_plane_attempt:14",
+      "record_id": "control-plane-bounded-run@2ea9528e:moltbot_attributed_control_plane_attempt:16",
       "producer_profile_id": "control-plane-bounded-run@2ea9528e",
       "record_type": "moltbot_attributed_control_plane_attempt",
-      "source_sequence": 14,
+      "source_sequence": 16,
       "source_path": "moltbot.control_plane_attempts[0]",
       "recorded_at": null,
       "identifiers": {
         "run_id": "run-1",
-        "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "attempt_id": "ec5ef7e0-8287-40b2-ba22-16e065142346",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829"
       },
       "evidence_class": "producer_reported",
       "data": {
-        "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
+        "attempt_id": "ec5ef7e0-8287-40b2-ba22-16e065142346",
         "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-        "decision_id": "63557fec-af54-484e-acab-0d0ab93ec528",
+        "decision_id": "f4d323dd-57dd-4df6-ab18-1fed10467845",
         "started_at": "2026-10-05T19:00:00+00:00",
         "status": "acknowledged",
         "acknowledgement": {
-          "moltbot_safe_status": "executed",
-          "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
-          "newly_executed": true,
-          "observation": {
-            "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-            "state": "applied",
-            "destination_state": {
-              "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
-              "state": "applied",
-              "grant_id": "urn:cognous:grant:routine-1",
-              "target": "urn:cognous:synthetic-account:customer-001",
-              "amount": 50.0,
-              "unit": "USD",
-              "payload": {
-                "customer_id": "customer-001",
-                "refund_reason": "duplicate"
-              },
-              "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
-            }
-          }
+          "reconciled_existing": true
         },
         "error": null
       }
     },
     {
-      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_effect:15",
+      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_effect:17",
       "producer_profile_id": "moltbot-safe-executor-producer-2.0.0@177354e9",
       "record_type": "destination_effect",
-      "source_sequence": 15,
+      "source_sequence": 17,
       "source_path": "moltbot.effects[0]",
       "recorded_at": null,
       "identifiers": {
@@ -676,20 +686,50 @@
         "payload_json": "{\"customer_id\":\"customer-001\",\"refund_reason\":\"duplicate\"}",
         "state": "applied"
       }
+    },
+    {
+      "record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:executor_observation:18",
+      "producer_profile_id": "moltbot-safe-executor-producer-2.0.0@177354e9",
+      "record_type": "executor_observation",
+      "source_sequence": 18,
+      "source_path": "moltbot.observations[0]",
+      "recorded_at": null,
+      "identifiers": {
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829"
+      },
+      "evidence_class": "producer_reported",
+      "data": {
+        "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+        "observed_at": "2026-10-05T19:00:00+00:00",
+        "state": "applied",
+        "destination_state": {
+          "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+          "state": "applied",
+          "grant_id": "urn:cognous:grant:routine-1",
+          "target": "urn:cognous:synthetic-account:customer-001",
+          "amount": 50.0,
+          "unit": "USD",
+          "payload": {
+            "customer_id": "customer-001",
+            "refund_reason": "duplicate"
+          },
+          "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
+        }
+      }
     }
   ],
   "links": [
     {
       "link_type": "explicit",
-      "from_record_id": "control-plane-bounded-run@2ea9528e:moltbot_attributed_control_plane_attempt:14",
-      "to_record_id": "control-plane-bounded-run@2ea9528e:control_plane_attempt_transition:3",
+      "from_record_id": "control-plane-bounded-run@2ea9528e:moltbot_attributed_control_plane_attempt:16",
+      "to_record_id": "control-plane-bounded-run@2ea9528e:control_plane_attempt_transition:4",
       "basis": "Producer-supplied Control Plane attempt evidence exactly matches the retained Control Plane run record.",
       "establishes_identity_equivalence": true
     },
     {
       "link_type": "explicit",
       "from_record_id": "control-plane-bounded-run@2ea9528e:control_plane_attempt_transition:3",
-      "to_record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_attempt:11",
+      "to_record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_attempt:13",
       "basis": "Control Plane acknowledgement explicitly supplied executor attempt_id.",
       "establishes_identity_equivalence": false
     }
@@ -770,7 +810,7 @@
       "value": "sha256:6b782ebbcc034edeca4069b31aa4d8cbc9d3eeaf3b2034ab989bb430de962c0e",
       "algorithm": "SHA-256",
       "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
-      "source_record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:execution_envelope:7",
+      "source_record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:execution_envelope:10",
       "source_path": "moltbot.execution_envelope.operation.payload_commitment",
       "verification_status": "checked_match",
       "notes": null
@@ -780,7 +820,7 @@
       "value": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175",
       "algorithm": "SHA-256",
       "canonicalization_profile": "json-sort-keys-compact-utf8-no-nan",
-      "source_record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_effect:15",
+      "source_record_id": "moltbot-safe-executor-producer-2.0.0@177354e9:destination_effect:17",
       "source_path": "moltbot.effects[0].operation_digest",
       "verification_status": "checked_match",
       "notes": "Checked against the exact retained Execution Envelope operation under the pinned canonicalization profile."
@@ -844,35 +884,47 @@
           1
         ],
         "latest_reconciliation": {
-          "source_index": 1,
-          "result": "hold",
-          "observation_accepted": false
+          "source_index": 2,
+          "result": "applied",
+          "observation_accepted": true
         },
         "latest_accepted_observation": {
-          "source_index": 0,
+          "source_index": 2,
           "observation": {
             "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
             "observed_at": "2026-10-05T19:00:00+00:00",
-            "state": "absent",
-            "destination_state": {}
+            "state": "applied",
+            "destination_state": {
+              "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
+              "state": "applied",
+              "grant_id": "urn:cognous:grant:routine-1",
+              "target": "urn:cognous:synthetic-account:customer-001",
+              "amount": 50.0,
+              "unit": "USD",
+              "payload": {
+                "customer_id": "customer-001",
+                "refund_reason": "duplicate"
+              },
+              "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
+            }
           }
         },
-        "latest_supported_destination_state": "unknown",
+        "latest_supported_destination_state": "applied",
         "retry_eligible": false,
         "acknowledgement_history": [
           {
             "source_index": 0,
-            "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
+            "attempt_id": "fb793fc3-009a-469c-a038-970de996e5f1",
             "status": "attempted",
             "acknowledgement": {}
           },
           {
             "source_index": 1,
-            "attempt_id": "bcaaff6c-7295-4ebb-9611-75d59c6fcbf8",
+            "attempt_id": "fb793fc3-009a-469c-a038-970de996e5f1",
             "status": "acknowledged",
             "acknowledgement": {
               "moltbot_safe_status": "executed",
-              "attempt_id": "48dafcc2-29e2-477d-99b1-4289e484c57d",
+              "attempt_id": "dffa5d12-a744-4c0b-992f-847f1dd005cc",
               "newly_executed": true,
               "observation": {
                 "effect_id": "sha256:d19d83b15e0ec164f3da356fe7a1ecef64734724d7fd65265e91e95f2ffe2829",
@@ -891,6 +943,14 @@
                   "operation_digest": "sha256:ffcad4c587ea3a81df49e9b2c5d3ee817a929d07356d8704db82c1b9c70af175"
                 }
               }
+            }
+          },
+          {
+            "source_index": 2,
+            "attempt_id": "ec5ef7e0-8287-40b2-ba22-16e065142346",
+            "status": "acknowledged",
+            "acknowledgement": {
+              "reconciled_existing": true
             }
           }
         ],

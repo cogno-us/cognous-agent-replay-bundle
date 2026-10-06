@@ -42,7 +42,7 @@ def test_real_producer_import(cases, name):
     if name.startswith('rejected') or name == 'unavailable':
         assert result['acknowledged'] and result['newly_executed']
         assert result['observation'] is None and result['observed_state'] == 'unknown'
-        assert bundle.status == 'reconstruction_partial'
+        assert bundle.status == 'reconstruction_complete'
         assert not any(r.record_type == 'executor_observation' for r in bundle.records)
         evidence = next(r for r in bundle.records if r.record_type == 'executor_control_plane_evidence')
         assert evidence.data == source['moltbot_export']['control_plane_evidence']
@@ -129,3 +129,72 @@ def test_published_v2_examples_preserve_profiles_and_content():
         assert all(r.evidence_class == 'producer_reported' for r in bundle.records)
         assert results[name]['effect_count_before_import'] == results[name]['effect_count_after_import']
         assert results[name]['records_unchanged']
+
+
+@pytest.mark.parametrize('name,latest,rejected', [
+    ('rejected_wrong_effect', 'unknown', True),
+    ('unavailable', 'unknown', True),
+    ('restart', 'applied', True),
+    ('rejected_restart', 'applied', True),
+    ('partial', 'partial', False),
+    ('lost_ack', 'applied', False),
+])
+def test_completeness_is_separate_from_delivery_history(cases, name, latest, rejected):
+    source = copy.deepcopy(cases[name])
+    bundle = import_bounded_workflow(**source)
+    assert bundle.status == 'reconstruction_complete'
+    assert all(report.complete for report in bundle.import_reports)
+    effect = source['moltbot_export']['execution_envelope']['effect_id']
+    history = bundle.metadata['effect_observation_history'][effect]
+    assert history['latest_supported_destination_state'] == latest
+    assert bool(history['rejected_reconciliation_indices']) == rejected
+    assert history['retry_eligible'] is False
+    assert history['cross_sequence_order'] == 'not_established'
+    recs = source['control_plane_record']['reconciliations']
+    retained = [r.data for r in bundle.records if r.record_type == 'reconciliation']
+    assert retained == recs
+    findings = [f for report in bundle.import_reports for f in report.findings if f.code == 'B020']
+    assert bool(findings) == rejected
+    assert all(f.severity == 'info' and 'delivery remains unresolved' not in f.message for f in findings)
+    if name in {'restart', 'rejected_restart'}:
+        assert any(not r['observation_accepted'] for r in retained)
+        assert history['latest_accepted_observation']['observation']['state'] == 'applied'
+    if name == 'lost_ack':
+        assert history['acknowledgement_history'][-1]['status'] == 'unknown'
+        assert history['acknowledgement_history'][-1]['acknowledgement'] == {}
+        result = next(r.data for r in bundle.records if r.record_type == 'execution_result')
+        assert result['acknowledged'] is False
+
+
+def test_sequence_not_reconciliation_timestamp_controls_latest(cases):
+    source = copy.deepcopy(cases['restart'])
+    # Reconciliation recorded-at clocks do not define cross-record ordering.
+    for rec in source['control_plane_record']['reconciliations'][:-1]:
+        rec['reconciled_at'] = '2099-01-01T00:00:00Z'
+    bundle = import_bounded_workflow(**source)
+    history = next(iter(bundle.metadata['effect_observation_history'].values()))
+    assert history['latest_supported_destination_state'] == 'applied'
+    assert history['latest_reconciliation']['source_index'] == len(source['control_plane_record']['reconciliations']) - 1
+
+
+def test_missing_executor_evidence_still_partial(cases):
+    source = copy.deepcopy(cases['restart'])
+    source.pop('moltbot_export')
+    bundle = import_bounded_workflow(**source)
+    assert bundle.status == 'reconstruction_partial'
+    assert any(f.code == 'B004' for report in bundle.import_reports for f in report.findings)
+    history = next(iter(bundle.metadata['effect_observation_history'].values()))
+    assert history['latest_supported_destination_state'] == 'applied'
+
+
+def test_later_rejection_does_not_erase_older_accepted_state(cases):
+    source = copy.deepcopy(cases['restart'])
+    source.pop('moltbot_export')
+    cp = source['control_plane_record']
+    earlier_rejection = next(r for r in cp['reconciliations'] if not r['observation_accepted'])
+    cp['reconciliations'].append(copy.deepcopy(earlier_rejection))
+    bundle = import_bounded_workflow(**source)
+    history = next(iter(bundle.metadata['effect_observation_history'].values()))
+    assert history['latest_supported_destination_state'] == 'unknown'
+    assert history['latest_accepted_observation']['observation']['state'] == 'applied'
+    assert history['latest_reconciliation']['observation_accepted'] is False
