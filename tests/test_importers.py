@@ -238,6 +238,86 @@ def moltbot_source(cp):
     }
 
 
+
+def versioned_moltbot_source(cp):
+    from agent_replay_bundle.importers import (
+        MOLTBOT_EXECUTOR_PROFILE,
+        MOLTBOT_EXECUTOR_PROFILE_VERSION,
+        MOLTBOT_SAFE_REVISION,
+        _sha256,
+    )
+    source = moltbot_source(cp)
+    source["producer_profile"] = {
+        "profile": MOLTBOT_EXECUTOR_PROFILE,
+        "profile_version": MOLTBOT_EXECUTOR_PROFILE_VERSION,
+        "schema_version": "1.0.0",
+        "execution_envelope_version": "0.2.0",
+        "repository_revision": MOLTBOT_SAFE_REVISION,
+        "repository_revision_provenance": "source_asserted",
+        "independently_established_provenance": False,
+    }
+    op = source["execution_envelope"]["operation"]
+    source["bindings"] = {
+        "decision_id": source["execution_envelope"]["decision_id"],
+        "effect_id": source["execution_envelope"]["effect_id"],
+        "operation_digest": _sha256(op),
+    }
+    source["observation"] = source["execution_result"]["observation"]
+    return source
+
+
+def test_versioned_moltbot_profile_is_distinct_from_legacy_revision_pin():
+    cp = bounded_source()
+    bundle = import_bounded_workflow(
+        cp,
+        proposal=proposal_source(),
+        moltbot_export=versioned_moltbot_source(cp),
+    )
+    assert bundle.metadata["moltbot_producer_contract_version"] == "1.0.0"
+    assert bundle.metadata["moltbot_repository_revision_provenance"] == "source_asserted"
+    assert bundle.metadata["moltbot_revision_independently_established"] is False
+    assert bundle.metadata["moltbot_legacy_unversioned"] is False
+    assert bundle.producer_profiles[-1].format_version == "1.0.0"
+
+
+def test_legacy_unversioned_moltbot_export_remains_revision_pinned():
+    cp = bounded_source()
+    bundle = import_bounded_workflow(
+        cp,
+        proposal=proposal_source(),
+        moltbot_export=moltbot_source(cp),
+    )
+    assert bundle.metadata["moltbot_producer_contract_version"] is None
+    assert bundle.metadata["moltbot_repository_revision_provenance"] == "revision_pinned_legacy"
+    assert bundle.metadata["moltbot_legacy_unversioned"] is True
+    assert bundle.producer_profiles[-1].revision == "6b0ba1185bcd390f71df947dda349415e4105f5f"
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("profile_version", "9.9.9"),
+        ("repository_revision", "deadbeef"),
+        ("repository_revision_provenance", "independently_established"),
+        ("independently_established_provenance", True),
+    ],
+)
+def test_versioned_moltbot_profile_rejects_unsupported_or_false_provenance(field, value):
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source["producer_profile"][field] = value
+    with pytest.raises(ImportContractError):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
+
+@pytest.mark.parametrize("field", ["decision_id", "effect_id", "operation_digest"])
+def test_versioned_moltbot_bindings_reject_contradiction(field):
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source["bindings"][field] = "wrong"
+    with pytest.raises(ImportContractError):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
 def test_confirmed_legacy_mappings_are_explicit():
     bundle = import_legacy_control_plane_replay(legacy_source())
     report = bundle.import_reports[0]
