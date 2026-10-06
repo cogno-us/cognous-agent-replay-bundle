@@ -488,3 +488,63 @@ def test_missing_proposal_with_moltbot_evidence_is_rejected_not_promoted_complet
     cp = bounded_source()
     with pytest.raises(ImportContractError, match="requires the corresponding RuntimeProposal"):
         import_bounded_workflow(cp, moltbot_export=moltbot_source(cp))
+
+
+def versioned_moltbot_source(cp):
+    source = moltbot_source(cp)
+    source.update(
+        producer_profile="cognous.moltbot-safe.executor",
+        producer_profile_version="1.0.0",
+        repository="cogno-us/moltbot-safe",
+        repository_revision="894e1c115cb91229c474a906c51ea9af7999e675",
+        provenance={
+            "source_asserted": True,
+            "independently_established": False,
+            "state": "source_asserted",
+        },
+        observation=copy.deepcopy(source["execution_result"].get("observation")),
+    )
+    return source
+
+
+def test_versioned_executor_producer_profile_imports_without_relabeling_legacy():
+    cp = bounded_source()
+    versioned = import_bounded_workflow(
+        cp, proposal=proposal_source(), moltbot_export=versioned_moltbot_source(cp)
+    )
+    assert versioned.metadata["moltbot_safe_revision"] == "894e1c115cb91229c474a906c51ea9af7999e675"
+    assert versioned.metadata["moltbot_producer_profile_version"] == "1.0.0"
+    producer = next(p for p in versioned.producer_profiles if p.repository == "cogno-us/moltbot-safe")
+    assert producer.format_version == "1.0.0"
+
+    legacy = import_bounded_workflow(
+        cp, proposal=proposal_source(), moltbot_export=moltbot_source(cp)
+    )
+    assert legacy.metadata["moltbot_safe_revision"] == "6b0ba1185bcd390f71df947dda349415e4105f5f"
+    assert legacy.metadata["moltbot_producer_profile_version"] is None
+    legacy_producer = next(p for p in legacy.producer_profiles if p.repository == "cogno-us/moltbot-safe")
+    assert legacy_producer.format_version == "0.2.0"
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    [
+        ("producer_profile_version", "9.9.9", "unsupported Moltbot executor producer profile version"),
+        ("repository_revision", "deadbeef", "unsupported Moltbot producer repository revision"),
+        ("repository", "other/repo", "repository mismatch"),
+    ],
+)
+def test_versioned_executor_profile_rejects_unsupported_contract(field, value, match):
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source[field] = value
+    with pytest.raises(ImportContractError, match=match):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
+
+
+def test_versioned_executor_profile_requires_source_asserted_provenance():
+    cp = bounded_source()
+    source = versioned_moltbot_source(cp)
+    source["provenance"]["source_asserted"] = False
+    with pytest.raises(ImportContractError, match="source-asserted"):
+        import_bounded_workflow(cp, proposal=proposal_source(), moltbot_export=source)
