@@ -19,7 +19,7 @@ from .reconstruction import (
 
 CONTROL_PLANE_REVISION = "283500652d47a692fb0b99a1172a6d5faffbd9a7"
 LEGACY_MOLTBOT_SAFE_REVISION = "6b0ba1185bcd390f71df947dda349415e4105f5f"
-MOLTBOT_SAFE_REVISION = "054e92d12ccb0bc756ca6652f39fc13b51e05d9b"  # proposed producer-contract head
+MOLTBOT_SAFE_REVISION = "1d308faf664c504b6e310db3c7a310153ef7b067"  # accepted producer-profile implementation
 MOLTBOT_PRODUCER_PROFILE_ID = "urn:cognous:profiles:moltbot-safe-executor-producer"
 MOLTBOT_PRODUCER_PROFILE_VERSION = "1.0.0"
 MANIFEST_REVISION = "46c950bed37fe3812000895430bc0312d29e37ce"
@@ -28,7 +28,7 @@ ALVORADA_REVISION = "fb3d97938969a89e149e8ff8db2756091d1233fc"
 LEGACY_PROFILE = "control-plane-legacy-replay@28350065"
 BOUNDED_PROFILE = "control-plane-bounded-run@28350065"
 LEGACY_MOLTBOT_PROFILE = "moltbot-safe-envelope-0.2.0@6b0ba118"
-MOLTBOT_PROFILE = "moltbot-safe-executor-producer-1.0.0@054e92d1"
+MOLTBOT_PROFILE = "moltbot-safe-executor-producer-1.0.0@1d308faf"
 
 
 class ImportContractError(ValueError):
@@ -621,6 +621,14 @@ def _import_moltbot(
     _validate_envelope_chain(op, proposal, binding)
     expected_operation_digest = _sha256(op)
 
+    versioned_contract = source.get("producer_profile") is not None
+    if versioned_contract:
+        for field in ("attempt_identity", "control_plane_attempts", "observations"):
+            if field not in source:
+                raise ImportContractError(
+                    f"versioned Moltbot export missing: {field}"
+                )
+
     records: list[SourceRecord] = []
     links: list[RecordLink] = []
     commitments: list[CommitmentRecord] = []
@@ -696,22 +704,131 @@ def _import_moltbot(
                  "effect_id": attempts[aid].get("effect_id"), "decision_id": attempts[aid].get("decision_id")},
         )); seq += 1
 
+    cp_attempt_records = {
+        r.identifiers.get("attempt_id"): r
+        for r in cp_records
+        if r.record_type == "control_plane_attempt_transition"
+        and isinstance(r.identifiers.get("attempt_id"), str)
+    }
+    supplied_cp_attempts = source.get("control_plane_attempts") or []
+    if not isinstance(supplied_cp_attempts, list):
+        raise ImportContractError("control_plane_attempts must be an array")
+    supplied_cp_by_id: dict[str, dict[str, Any]] = {}
+    for i, raw in enumerate(supplied_cp_attempts):
+        raw = _obj(raw, f"moltbot.control_plane_attempts[{i}]")
+        aid = raw.get("attempt_id")
+        if not isinstance(aid, str) or not aid:
+            raise ImportContractError(
+                f"moltbot.control_plane_attempts[{i}].attempt_id required"
+            )
+        owner_record = cp_attempt_records.get(aid)
+        if owner_record is None:
+            raise ImportContractError(
+                f"Control Plane attempt evidence has no owning producer record: {aid}"
+            )
+        if owner_record.data != raw:
+            raise ImportContractError(
+                f"Control Plane attempt evidence conflicts with owning producer record: {aid}"
+            )
+        if raw.get("decision_id") != envelope_decision:
+            raise ImportContractError(
+                f"Control Plane attempt evidence {aid} decision binding mismatch"
+            )
+        if raw.get("effect_id") != envelope_effect:
+            raise ImportContractError(
+                f"Control Plane attempt evidence {aid} effect binding mismatch"
+            )
+        _unique_or_same(
+            supplied_cp_by_id, aid, raw, "supplied Control Plane attempt_id"
+        )
+        records.append(_record(
+            BOUNDED_PROFILE,
+            "moltbot_attributed_control_plane_attempt",
+            seq,
+            f"moltbot.control_plane_attempts[{i}]",
+            raw,
+            ids={
+                "run_id": cp_records[0].identifiers.get("run_id") if cp_records else None,
+                "attempt_id": aid,
+                "decision_id": raw.get("decision_id"),
+                "effect_id": raw.get("effect_id"),
+            },
+        ))
+        seq += 1
+        links.append(RecordLink(
+            link_type="explicit",
+            from_record_id=records[-1].record_id,
+            to_record_id=owner_record.record_id,
+            basis="Producer-supplied Control Plane attempt evidence exactly matches the retained Control Plane run record.",
+            establishes_identity_equivalence=True,
+        ))
+
+    attempt_identity = source.get("attempt_identity")
+    if attempt_identity is not None:
+        attempt_identity = _obj(attempt_identity, "moltbot.attempt_identity")
+        namespace = attempt_identity.get("namespace")
+        owner = attempt_identity.get("owner")
+        aid = attempt_identity.get("attempt_id")
+        if not isinstance(aid, str) or not aid:
+            raise ImportContractError("attempt_identity.attempt_id required")
+        if namespace == "executor":
+            if owner != "cogno-us/moltbot-safe":
+                raise ImportContractError("executor attempt_identity owner mismatch")
+            if aid not in attempts:
+                raise ImportContractError(
+                    f"executor attempt_identity has dangling attempt_id {aid}"
+                )
+        elif namespace == "control_plane":
+            if owner != "cogno-us/cognous-agent-control-plane":
+                raise ImportContractError("Control Plane attempt_identity owner mismatch")
+            if aid not in supplied_cp_by_id:
+                raise ImportContractError(
+                    f"Control Plane attempt_identity lacks attributed producer evidence: {aid}"
+                )
+        else:
+            raise ImportContractError("unsupported attempt_identity namespace")
+
     result_attempt_id = result.get("attempt_id")
     if result_attempt_id is not None:
         if not isinstance(result_attempt_id, str) or not result_attempt_id:
             raise ImportContractError("execution_result.attempt_id must be a non-empty string when supplied")
-        moltbot_ids = set(attempts)
-        cp_attempt_ids = {
-            r.identifiers.get("attempt_id")
-            for r in cp_records if r.record_type == "control_plane_attempt_transition"
-        }
-        if result_attempt_id not in moltbot_ids and result_attempt_id not in cp_attempt_ids:
-            raise ImportContractError(f"execution_result has dangling attempt_id {result_attempt_id}")
-        if result_attempt_id in cp_attempt_ids and result_attempt_id not in moltbot_ids:
-            if result.get("status") not in {"reconciled", "partial", "unknown"} or result.get("newly_executed") is not False:
+        if versioned_contract:
+            if attempt_identity is None:
                 raise ImportContractError(
-                    "Control Plane attempt namespace is valid only for non-new reconciliation results"
+                    "versioned execution_result attempt_id requires attempt_identity"
                 )
+            if attempt_identity.get("attempt_id") != result_attempt_id:
+                raise ImportContractError(
+                    "execution_result attempt_id conflicts with attempt_identity"
+                )
+            if attempt_identity.get("namespace") == "control_plane":
+                if result.get("status") not in {"reconciled", "partial", "unknown"}:
+                    raise ImportContractError(
+                        "Control Plane attempt namespace is valid only for reconciliation/partial/unknown results"
+                    )
+                if result.get("newly_executed") is not False:
+                    raise ImportContractError(
+                        "Control Plane attempt namespace cannot represent a newly executed effect"
+                    )
+            elif attempt_identity.get("namespace") == "executor":
+                if result_attempt_id not in attempts:
+                    raise ImportContractError(
+                        f"execution_result has dangling executor attempt_id {result_attempt_id}"
+                    )
+        else:
+            moltbot_ids = set(attempts)
+            cp_attempt_ids = set(cp_attempt_records)
+            if result_attempt_id not in moltbot_ids and result_attempt_id not in cp_attempt_ids:
+                raise ImportContractError(f"execution_result has dangling attempt_id {result_attempt_id}")
+            if result_attempt_id in cp_attempt_ids and result_attempt_id not in moltbot_ids:
+                if result.get("status") not in {"reconciled", "partial", "unknown"} or result.get("newly_executed") is not False:
+                    raise ImportContractError(
+                        "Control Plane attempt namespace is valid only for non-new reconciliation results"
+                    )
+    elif versioned_contract and attempt_identity is not None:
+        raise ImportContractError(
+            "attempt_identity supplied when execution_result.attempt_id is absent"
+        )
 
     effects: dict[str, dict[str, Any]] = {}
     for i, raw in enumerate(source["effects"]):
@@ -749,41 +866,79 @@ def _import_moltbot(
                 notes="Checked against the exact retained Execution Envelope operation under the pinned canonicalization profile.",
             ))
 
+    status = result.get("status")
+    observed_state = result.get("observed_state")
+    if status in {"executed", "reconciled", "partial"} and observed_state in {"applied", "partial"} and not effects:
+        raise ImportContractError(
+            "execution result requires retained destination effect evidence"
+        )
+    if status == "observed" and observed_state in {"applied", "partial"} and not effects:
+        raise ImportContractError(
+            "historical observation requires retained destination effect evidence"
+        )
+    if status in {"denied"} and effects:
+        raise ImportContractError("denied execution result contradicts retained effect evidence")
+    if status == "observed" and observed_state in {"absent", "unknown"} and effects:
+        raise ImportContractError(
+            "absence/unknown observation contradicts retained destination effect evidence"
+        )
+
     for i, raw in enumerate(source.get("observations") or []):
         raw = _obj(raw, f"moltbot.observations[{i}]")
         _validate_observation_content(raw, envelope_effect, op, f"moltbot.observations[{i}]")
+        if raw.get("state") in {"absent", "unknown"}:
+            destination_state = raw.get("destination_state")
+            if isinstance(destination_state, dict) and destination_state:
+                raise ImportContractError(
+                    f"moltbot.observations[{i}] absence/unknown must not fabricate destination_state"
+                )
         records.append(_record(
             profile_id, "executor_observation", seq, f"moltbot.observations[{i}]", raw,
             ids={"effect_id": raw.get("effect_id")},
         ))
         seq += 1
 
-    cp_attempts = [r for r in cp_records if r.record_type == "control_plane_attempt_transition"]
+    cp_attempts = [
+        r for r in cp_records
+        if r.record_type == "control_plane_attempt_transition"
+    ]
     for cr in cp_attempts:
         ack = cr.data.get("acknowledgement")
         if isinstance(ack, dict) and isinstance(ack.get("attempt_id"), str):
             local_id = ack["attempt_id"]
-            matches = [r for r in records
-                       if r.record_type == "destination_attempt" and r.identifiers.get("attempt_id") == local_id]
+            matches = [
+                r for r in records
+                if r.record_type == "destination_attempt"
+                and r.identifiers.get("attempt_id") == local_id
+            ]
             if len(matches) == 1:
                 links.append(RecordLink(
-                    link_type="explicit", from_record_id=cr.record_id, to_record_id=matches[0].record_id,
-                    basis="Control Plane acknowledgement explicitly supplied Moltbot attempt_id.",
+                    link_type="explicit",
+                    from_record_id=cr.record_id,
+                    to_record_id=matches[0].record_id,
+                    basis="Control Plane acknowledgement explicitly supplied executor attempt_id.",
                     establishes_identity_equivalence=False,
                 ))
             else:
                 findings.append(ImportFinding(
-                    code="M001", category="missing_dependency", severity="warning",
+                    code="M001",
+                    category="missing_dependency",
+                    severity="warning",
                     path=cr.source_path + ".acknowledgement.attempt_id",
                     message="Explicit executor attempt ID did not resolve uniquely.",
                     value_state="unavailable",
                 ))
 
-    if cp_attempts and attempts and not links:
+    if cp_attempts and attempts and not any(
+        link.to_record_id.startswith(profile_id + ":destination_attempt")
+        for link in links
+    ):
         findings.append(ImportFinding(
-            code="M002", category="unsupported_semantic", severity="warning",
+            code="M002",
+            category="unsupported_semantic",
+            severity="warning",
             path="attempt_correlation",
-            message="Control Plane and Moltbot attempt namespaces are preserved separately; no equivalence is inferred.",
+            message="Control Plane and executor attempt namespaces are preserved separately; no equivalence is inferred.",
             value_state="unknown",
         ))
     findings.append(ImportFinding(
