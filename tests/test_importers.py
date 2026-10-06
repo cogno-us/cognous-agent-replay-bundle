@@ -514,6 +514,8 @@ def test_versioned_executor_producer_profile_imports_without_relabeling_legacy()
     )
     assert versioned.metadata["moltbot_safe_revision"] == "894e1c115cb91229c474a906c51ea9af7999e675"
     assert versioned.metadata["moltbot_producer_profile_version"] == "1.0.0"
+    assert versioned.metadata["moltbot_provenance"]["source_asserted"] is True
+    assert versioned.metadata["moltbot_provenance"]["independently_established"] is False
     producer = next(p for p in versioned.producer_profiles if p.repository == "cogno-us/moltbot-safe")
     assert producer.format_version == "1.0.0"
 
@@ -522,6 +524,7 @@ def test_versioned_executor_producer_profile_imports_without_relabeling_legacy()
     )
     assert legacy.metadata["moltbot_safe_revision"] == "6b0ba1185bcd390f71df947dda349415e4105f5f"
     assert legacy.metadata["moltbot_producer_profile_version"] is None
+    assert legacy.metadata["moltbot_provenance"]["state"] == "legacy_unversioned"
     legacy_producer = next(p for p in legacy.producer_profiles if p.repository == "cogno-us/moltbot-safe")
     assert legacy_producer.format_version == "0.2.0"
 
