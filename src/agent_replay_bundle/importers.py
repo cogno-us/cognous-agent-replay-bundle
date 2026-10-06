@@ -513,8 +513,20 @@ def import_bounded_workflow(
     )]
 
     moltbot_compatibility = None
+    moltbot_source_profile = None
+    moltbot_source_bindings = None
     if moltbot_export is not None:
         source_export = _obj(moltbot_export, "moltbot_export")
+        moltbot_source_profile = (
+            dict(source_export["producer_profile"])
+            if isinstance(source_export.get("producer_profile"), dict)
+            else None
+        )
+        moltbot_source_bindings = (
+            dict(source_export["bindings"])
+            if isinstance(source_export.get("bindings"), dict)
+            else None
+        )
         moltbot_compatibility = _resolve_moltbot_compatibility(source_export)
         mr, ml, mc, mf = _import_moltbot(
             source_export,
@@ -595,6 +607,8 @@ def import_bounded_workflow(
                 moltbot_compatibility["legacy_unversioned"]
                 if moltbot_compatibility else None
             ),
+            "moltbot_source_producer_profile": moltbot_source_profile,
+            "moltbot_source_bindings": moltbot_source_bindings,
             "manifest_revision": MANIFEST_REVISION,
             "alvorada_revision": ALVORADA_REVISION,
         },
