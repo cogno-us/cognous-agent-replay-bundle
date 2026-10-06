@@ -516,7 +516,17 @@ def versioned_moltbot_source(cp):
         "independently_established": [],
         "meaning": "source assertion only",
     }
-    source["observations"] = [copy.deepcopy(source["execution_result"]["observation"])]
+    observation = copy.deepcopy(source["execution_result"]["observation"])
+    observation["destination_state"] = {
+        "effect_id": source["execution_envelope"]["effect_id"],
+        "grant_id": source["execution_envelope"]["operation"]["grant_id"],
+        "target": source["execution_envelope"]["operation"]["target"],
+        "amount": source["execution_envelope"]["operation"]["amount"],
+        "unit": source["execution_envelope"]["operation"]["unit"],
+        "payload": copy.deepcopy(source["execution_envelope"]["operation"]["payload"]),
+        "state": "applied",
+    }
+    source["observations"] = [observation]
     return source
 
 
