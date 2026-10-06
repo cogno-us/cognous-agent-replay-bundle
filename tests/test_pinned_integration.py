@@ -14,7 +14,7 @@ from agent_replay_bundle.importers import import_bounded_workflow
 
 
 CP_REVISION = "283500652d47a692fb0b99a1172a6d5faffbd9a7"
-MOLTBOT_REVISION = "054e92d12ccb0bc756ca6652f39fc13b51e05d9b"
+MOLTBOT_REVISION = "1d308faf664c504b6e310db3c7a310153ef7b067"
 MANIFEST_REVISION = "46c950bed37fe3812000895430bc0312d29e37ce"
 ALVORADA_REVISION = "fb3d97938969a89e149e8ff8db2756091d1233fc"
 
@@ -190,10 +190,24 @@ def test_actual_pinned_duplicate_restart_reconciles_without_second_effect(tmp_pa
     assert len(_effect_rows(restarted_destination)) == 1
 
     cp, p, m = _export_sources(workflow, proposal, request, second, restarted_destination)
+    assert m["attempt_identity"]["namespace"] == "control_plane"
+    assert m["attempt_identity"]["owner"] == "cogno-us/cognous-agent-control-plane"
+    assert len(m["control_plane_attempts"]) == 1
+    cp_attempt_id = m["attempt_identity"]["attempt_id"]
+    executor_attempt_ids = {row["attempt_id"] for row in m["attempts"]}
+    assert cp_attempt_id not in executor_attempt_ids
+    assert any(row["attempt_id"] == cp_attempt_id for row in cp["attempts"])
+
     before = _effect_rows(restarted_destination)
     bundle = import_bounded_workflow(cp, proposal=p, moltbot_export=m)
     assert _effect_rows(restarted_destination) == before
+    assert len(before) == 1
     assert any(r.record_type == "reconciliation" for r in bundle.records)
+    assert any(
+        r.record_type == "moltbot_attributed_control_plane_attempt"
+        and r.identifiers["attempt_id"] == cp_attempt_id
+        for r in bundle.records
+    )
 
 
 def test_actual_pinned_partial_delivery_stays_partial(tmp_path):
@@ -229,3 +243,24 @@ def test_actual_pinned_stale_evidence_prevents_execution(tmp_path):
     bundle = import_bounded_workflow(cp, proposal=p, moltbot_export=m)
     assert bundle.semantics.external_effect_execution is False
     assert _effect_rows(destination) == []
+
+
+
+def test_actual_pinned_historical_absent_observation_imports_without_effect(tmp_path):
+    h = _load_actual_pinned_moltbot_helpers()
+    helper, proposal, resolver, workflow, decision, destination, executor, request = h._integrated(tmp_path)
+    observed = executor.observe_historical(request)
+    assert observed.status == "observed"
+    assert observed.observed_state == "absent"
+    assert _effect_rows(destination) == []
+
+    cp, p, m = _export_sources(workflow, proposal, request, observed, destination)
+    assert m["effects"] == []
+    assert m["attempt_identity"] is None
+    bundle = import_bounded_workflow(cp, proposal=p, moltbot_export=m)
+
+    assert _effect_rows(destination) == []
+    assert any(
+        r.record_type == "executor_observation" and r.data["state"] == "absent"
+        for r in bundle.records
+    )
