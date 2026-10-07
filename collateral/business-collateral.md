@@ -1,4 +1,4 @@
-# Agent Replay Bundle — Business Collateral
+# Cognous Replay Bundle — Business Collateral
 
 ## 1. Executive Summary
 
