@@ -38,6 +38,11 @@ CONTROL_PLANE_V2_REVISIONS = (
     CONTROL_PLANE_V2_REVISION,
     CONTROL_PLANE_V2_PERSISTENCE_REVISION,
 )
+CONTROL_PLANE_MERGED_REVISION = "d3dadee70bd319812b207389ab1e0f6efe511916"
+MOLTBOT_MERGED_REVISION = "c3c3ee7188b9367cf70b08074b9c40a5c70c94ac"
+BOUNDED_MERGED_PROFILE = "control-plane-bounded-run@d3dadee7"
+MOLTBOT_MERGED_PROFILE = "moltbot-safe-executor-producer-2.0.0@c3c3ee71"
+CONTROL_PLANE_SUPPORTED_V2_REVISIONS = (*CONTROL_PLANE_V2_REVISIONS, CONTROL_PLANE_MERGED_REVISION)
 MOLTBOT_V2_REVISION = "177354e959cc78c59c1a776f018cfbfbf28c927b"
 BOUNDED_V2_PROFILE = "control-plane-bounded-run@2ea9528e"
 BOUNDED_V2_PERSISTENCE_PROFILE = "control-plane-bounded-run@248d8996"
@@ -292,6 +297,13 @@ def _moltbot_contract(source: dict[str, Any]) -> dict[str, Any]:
     revision = repository.get("revision")
     supported_revision, cp_revision, profile = PRODUCER_COMPATIBILITY[version]
     compatible_cp_revisions = list(CONTROL_PLANE_V2_REVISIONS) if version == "2.0.0" else [cp_revision]
+    # The merged pair is qualified for the unchanged bounded producer path only.
+    # Preserve historical pairings; never accept a Cartesian product of revisions.
+    if version == "2.0.0" and revision == MOLTBOT_MERGED_REVISION:
+        supported_revision = MOLTBOT_MERGED_REVISION
+        cp_revision = CONTROL_PLANE_MERGED_REVISION
+        profile = MOLTBOT_MERGED_PROFILE
+        compatible_cp_revisions = [CONTROL_PLANE_MERGED_REVISION]
     if revision != supported_revision:
         raise ImportContractError("unsupported Moltbot producer repository revision")
     if repository.get("revision_status") not in {"source_asserted", "unavailable"}:
@@ -332,12 +344,13 @@ def import_bounded_workflow(
     control_plane_revision: str = CONTROL_PLANE_REVISION,
 ) -> ReconstructionBundle:
     """Import bounded Control Plane events and optional Moltbot destination evidence."""
-    if control_plane_revision not in {CONTROL_PLANE_REVISION, *CONTROL_PLANE_V2_REVISIONS}:
+    if control_plane_revision not in {CONTROL_PLANE_REVISION, *CONTROL_PLANE_SUPPORTED_V2_REVISIONS}:
         raise ImportContractError("unsupported Control Plane revision")
-    repaired = control_plane_revision in CONTROL_PLANE_V2_REVISIONS
+    repaired = control_plane_revision in CONTROL_PLANE_SUPPORTED_V2_REVISIONS
     bounded_profile = {
         CONTROL_PLANE_V2_REVISION: BOUNDED_V2_PROFILE,
         CONTROL_PLANE_V2_PERSISTENCE_REVISION: BOUNDED_V2_PERSISTENCE_PROFILE,
+        CONTROL_PLANE_MERGED_REVISION: BOUNDED_MERGED_PROFILE,
     }.get(control_plane_revision, BOUNDED_PROFILE)
     if moltbot_export is not None:
         contract = _moltbot_contract(moltbot_export)
