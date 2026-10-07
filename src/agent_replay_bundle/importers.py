@@ -560,7 +560,6 @@ def import_bounded_workflow(
     )]
 
     if moltbot_export is not None:
-        contract = _moltbot_contract(moltbot_export)
         mr, ml, mc, mf = _import_moltbot(
             moltbot_export, seq, records,
             proposal=p if proposal is not None else None,
