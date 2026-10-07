@@ -18,7 +18,7 @@ import tempfile
 from unittest.mock import patch
 
 from agent_replay_bundle import import_bounded_workflow, ReconstructionBundle
-from agent_replay_bundle.importers import CONTROL_PLANE_V2_REVISION, MOLTBOT_V2_REVISION, MANIFEST_REVISION
+from agent_replay_bundle.importers import CONTROL_PLANE_V2_REVISIONS, MOLTBOT_V2_REVISION, MANIFEST_REVISION
 from agent_replay_bundle.reconstruction import content_digest
 
 
@@ -26,7 +26,10 @@ def main(output: Path):
     cp = Path(os.environ['ARB_V2_CONTROL_PLANE_ROOT']).resolve()
     executor_root = Path(os.environ['ARB_V2_MOLTBOT_ROOT']).resolve()
     manifest = Path(os.environ['ARB_PINNED_MANIFEST_FIXTURE']).resolve()
-    for path, revision in ((cp, CONTROL_PLANE_V2_REVISION), (executor_root, MOLTBOT_V2_REVISION), (manifest.parents[1], MANIFEST_REVISION)):
+    cp_revision = subprocess.check_output(['git', '-C', str(cp), 'rev-parse', 'HEAD'], text=True).strip()
+    if cp_revision not in CONTROL_PLANE_V2_REVISIONS:
+        raise RuntimeError(f'wrong pinned Control Plane revision: {cp_revision}')
+    for path, revision in ((executor_root, MOLTBOT_V2_REVISION), (manifest.parents[1], MANIFEST_REVISION)):
         actual = subprocess.check_output(['git', '-C', str(path), 'rev-parse', 'HEAD'], text=True).strip()
         if actual != revision:
             raise RuntimeError(f'wrong pinned producer revision: {actual}')
@@ -95,7 +98,7 @@ def main(output: Path):
             assert len(m['attempts']) == expected_attempts
             source = {'control_plane_record': w.records.load().model_dump(mode='json'),
                       'proposal': p.model_dump(mode='json', exclude_none=False), 'moltbot_export': m,
-                      'control_plane_revision': CONTROL_PLANE_V2_REVISION}
+                      'control_plane_revision': cp_revision}
             before_import = dest.observe(d.effect_id)
             count = dest.effect_count(request.operation.grant_id)
             expected_count = 0 if name in {'prior_absence', 'denied', 'historical_absent'} else 1
@@ -141,7 +144,7 @@ def main(output: Path):
                 (output / f'producer_v2_{name}.json').write_text(bundle.model_dump_json(indent=2) + '\n')
     (output / 'producer_v2_sources.json').write_text(json.dumps(cases, indent=2) + '\n')
     (output / 'producer_v2_results.json').write_text(json.dumps({
-        'pins': {'control_plane': CONTROL_PLANE_V2_REVISION, 'executor': MOLTBOT_V2_REVISION, 'manifest': MANIFEST_REVISION},
+        'pins': {'control_plane': cp_revision, 'executor': MOLTBOT_V2_REVISION, 'manifest': MANIFEST_REVISION},
         'scope': 'synthetic same-host SQLite; reconstruction is non-effecting; no independent verification',
         'scenarios': summaries}, indent=2) + '\n')
     print(f'{len(cases)} real-producer scenarios passed; destination and CP stores unchanged by import')
