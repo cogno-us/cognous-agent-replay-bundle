@@ -188,10 +188,16 @@ assurance. Existing historical examples and constants keep their original pins.
 | Legacy unversioned, envelope 0.2.0 | `6b0ba1185bcd390f71df947dda349415e4105f5f` | `283500652d47a692fb0b99a1172a6d5faffbd9a7` | Existing explicit legacy adapter default |
 | Producer 1.0.0, envelope 0.2.0 | `1d308faf664c504b6e310db3c7a310153ef7b067` | `283500652d47a692fb0b99a1172a6d5faffbd9a7` | Existing versioned adapter default |
 | Producer 2.0.0, envelope 0.2.0 | `177354e959cc78c59c1a776f018cfbfbf28c927b` | `2ea9528eeb87e14ff10f05de06473122b9df540f` | Explicit `control_plane_revision=CONTROL_PLANE_V2_REVISION` |
+| Producer 2.0.0, envelope 0.2.0 | `177354e959cc78c59c1a776f018cfbfbf28c927b` | `248d899634d9db3518e831bc7ab568a48733f825` | Same v2 wire contract; exact persistence-repair revision via `CONTROL_PLANE_V2_PERSISTENCE_REVISION` |
 
 The producer profile ID remains
 `urn:cognous:profiles:moltbot-safe-executor-producer`. Unsupported combinations
 fail, including a v2 export with the historical default Control Plane selection.
+Both accepted v2 Control Plane revisions remain exact pins. The later revision
+changes same-host record persistence (locking, reload, flush/fsync and atomic
+replacement) but does not change the consumed `BoundedRunRecord` wire contract;
+Replay therefore retains Reconstruction Bundle 0.2.0 and assigns the later
+Control Plane evidence its own revision-specific producer profile.
 The revision argument selects a decoder contract; it does not authenticate the
 source repository. Source-asserted provenance and supplied independent-evidence
 entries remain attributed source content. Replay does not independently establish
