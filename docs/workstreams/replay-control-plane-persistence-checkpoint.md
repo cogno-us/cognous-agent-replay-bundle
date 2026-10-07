@@ -79,3 +79,41 @@ revision may continue using `2ea9528eeb87e14ff10f05de06473122b9df540f`.
 Revision selection remains explicit and does not authenticate repository origin.
 
 No ODES, Evidence Pack, GAX, executor or hub change is included here.
+
+
+## PR #9 correction — reviewed head `1afcc0c40ceceddcaee50c7ee714404f4e918347`
+
+CI run `37580255993` exposed two focused qualification defects: an
+over-strong historical-rejection assertion and tuple metadata that was not JSON
+stable. The first corrected run also exposed that the selected persistence
+revision was reset to the earlier compatibility default when the producer
+contract was rebuilt later in import.
+
+Corrections:
+- Rejected-recovery qualification now asserts the actual retained Control Plane
+  reconciliation sequence, rejected observation/reasons, and later accepted
+  applied observation in producer order. It compares executor-side rejected
+  observation records only to evidence actually present in
+  `moltbot_export.rejected_observations`; no record is manufactured or duplicated.
+- `compatible_control_plane_revisions` is emitted as a JSON-native list.
+- The validated producer contract is retained through import. Its
+  `control_plane_revision` is the actual selected revision, while
+  `compatible_control_plane_revisions` remains the supported set.
+- Tests cover both accepted v2 Control Plane revisions and require agreement
+  among top-level metadata, the Control Plane producer profile and the nested
+  producer contract.
+- Exact bundle JSON round-trip equality remains required.
+
+Validation at head `25c4bff8674a11378893c889fd5b68733432fc81`,
+GitHub Actions run `37580648145`:
+- Python 3.11 focused persistence qualification: **18 passed**.
+- Python 3.11 complete Replay suite: **231 passed**.
+- Python 3.11 existing example checks: **passed**.
+- Python 3.12 focused persistence qualification: **18 passed**.
+- Python 3.12 complete Replay suite: **231 passed**.
+- Python 3.12 producer-v2 example generation: **14 real-producer scenarios passed**;
+  destination and Control Plane stores remained unchanged by Replay import.
+- Python 3.12 existing example checks: **passed**.
+- Workflow conclusion: **success**.
+
+No format-version bump, downstream change or self-merge was made.
