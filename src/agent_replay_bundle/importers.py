@@ -33,8 +33,14 @@ MOLTBOT_PROFILE = "moltbot-safe-executor-producer-1.0.0@1d308faf"
 
 
 CONTROL_PLANE_V2_REVISION = "2ea9528eeb87e14ff10f05de06473122b9df540f"
+CONTROL_PLANE_V2_PERSISTENCE_REVISION = "248d899634d9db3518e831bc7ab568a48733f825"
+CONTROL_PLANE_V2_REVISIONS = (
+    CONTROL_PLANE_V2_REVISION,
+    CONTROL_PLANE_V2_PERSISTENCE_REVISION,
+)
 MOLTBOT_V2_REVISION = "177354e959cc78c59c1a776f018cfbfbf28c927b"
 BOUNDED_V2_PROFILE = "control-plane-bounded-run@2ea9528e"
+BOUNDED_V2_PERSISTENCE_PROFILE = "control-plane-bounded-run@248d8996"
 MOLTBOT_V2_PROFILE = "moltbot-safe-executor-producer-2.0.0@177354e9"
 PRODUCER_COMPATIBILITY = {
     "1.0.0": (MOLTBOT_SAFE_REVISION, CONTROL_PLANE_REVISION, MOLTBOT_PROFILE),
@@ -285,6 +291,7 @@ def _moltbot_contract(source: dict[str, Any]) -> dict[str, Any]:
     repository = _obj(source.get("repository"), "moltbot_export.repository")
     revision = repository.get("revision")
     supported_revision, cp_revision, profile = PRODUCER_COMPATIBILITY[version]
+    compatible_cp_revisions = list(CONTROL_PLANE_V2_REVISIONS) if version == "2.0.0" else [cp_revision]
     if revision != supported_revision:
         raise ImportContractError("unsupported Moltbot producer repository revision")
     if repository.get("revision_status") not in {"source_asserted", "unavailable"}:
@@ -305,6 +312,7 @@ def _moltbot_contract(source: dict[str, Any]) -> dict[str, Any]:
     return {
         "profile_id": profile,
         "control_plane_revision": cp_revision,
+        "compatible_control_plane_revisions": compatible_cp_revisions,
         "repository_revision": revision,
         "interface_profile_id": MOLTBOT_PRODUCER_PROFILE_ID,
         "interface_profile_version": version,
@@ -324,15 +332,22 @@ def import_bounded_workflow(
     control_plane_revision: str = CONTROL_PLANE_REVISION,
 ) -> ReconstructionBundle:
     """Import bounded Control Plane events and optional Moltbot destination evidence."""
-    if control_plane_revision not in {CONTROL_PLANE_REVISION, CONTROL_PLANE_V2_REVISION}:
+    if control_plane_revision not in {CONTROL_PLANE_REVISION, *CONTROL_PLANE_V2_REVISIONS}:
         raise ImportContractError("unsupported Control Plane revision")
-    repaired = control_plane_revision == CONTROL_PLANE_V2_REVISION
-    bounded_profile = BOUNDED_V2_PROFILE if repaired else BOUNDED_PROFILE
+    repaired = control_plane_revision in CONTROL_PLANE_V2_REVISIONS
+    bounded_profile = {
+        CONTROL_PLANE_V2_REVISION: BOUNDED_V2_PROFILE,
+        CONTROL_PLANE_V2_PERSISTENCE_REVISION: BOUNDED_V2_PERSISTENCE_PROFILE,
+    }.get(control_plane_revision, BOUNDED_PROFILE)
     if moltbot_export is not None:
         contract = _moltbot_contract(moltbot_export)
-        expected_cp = contract.get("control_plane_revision", CONTROL_PLANE_REVISION)
-        if expected_cp != control_plane_revision:
+        expected_cps = contract.get(
+            "compatible_control_plane_revisions",
+            (contract.get("control_plane_revision", CONTROL_PLANE_REVISION),),
+        )
+        if control_plane_revision not in expected_cps:
             raise ImportContractError("unsupported executor/Control Plane revision combination")
+        contract["control_plane_revision"] = control_plane_revision
     cp = _obj(control_plane_record, "control_plane_record")
     if repaired:
         _validate_repaired_run(cp)
@@ -545,7 +560,6 @@ def import_bounded_workflow(
     )]
 
     if moltbot_export is not None:
-        contract = _moltbot_contract(moltbot_export)
         mr, ml, mc, mf = _import_moltbot(
             moltbot_export, seq, records,
             proposal=p if proposal is not None else None,
@@ -607,12 +621,8 @@ def import_bounded_workflow(
         metadata={
             **({"effect_observation_history": _effect_observation_history(cp)} if repaired else {}),
             "control_plane_revision": control_plane_revision,
-            "moltbot_safe_revision": (
-                (_moltbot_contract(moltbot_export)["repository_revision"]) if moltbot_export else None
-            ),
-            "moltbot_producer_contract": (
-                _moltbot_contract(moltbot_export) if moltbot_export else None
-            ),
+            "moltbot_safe_revision": contract["repository_revision"] if moltbot_export else None,
+            "moltbot_producer_contract": contract if moltbot_export else None,
             "manifest_revision": MANIFEST_REVISION,
             "alvorada_revision": ALVORADA_REVISION,
         },
