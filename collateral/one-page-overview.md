@@ -31,4 +31,4 @@ Reconstruction is non-effecting. It does not reevaluate policy, renew authorizat
 
 Choose one bounded example and follow the [README](../README.md). Compare expected and observed results and retain uncertainty. The [business collateral](business-collateral.md) supplies evaluation questions and the component's wider context.
 
-[Cognous](https://cogno.us) · [Source](https://github.com/cogno-us/cognous-agent-replay-bundle) · [All stack components](https://github.com/cogno-us/cognous-open-control-stack). Existing licenses and notices apply.
+[Cognous](https://cogno.us) · [Source](https://github.com/cogno-us/cognous-replay-bundle) · [All stack components](https://github.com/cogno-us/cognous-open-control-stack). Existing licenses and notices apply.
