@@ -18,7 +18,7 @@ import tempfile
 from unittest.mock import patch
 
 from agent_replay_bundle import import_bounded_workflow, ReconstructionBundle
-from agent_replay_bundle.importers import CONTROL_PLANE_V2_REVISIONS, MOLTBOT_V2_REVISION, MANIFEST_REVISION
+from agent_replay_bundle.importers import (CONTROL_PLANE_SUPPORTED_V2_REVISIONS, MOLTBOT_V2_REVISION, MANIFEST_REVISION, CONTROL_PLANE_MERGED_REVISION, MOLTBOT_MERGED_REVISION)
 from agent_replay_bundle.reconstruction import content_digest
 
 
@@ -27,9 +27,10 @@ def main(output: Path):
     executor_root = Path(os.environ['ARB_V2_MOLTBOT_ROOT']).resolve()
     manifest = Path(os.environ['ARB_PINNED_MANIFEST_FIXTURE']).resolve()
     cp_revision = subprocess.check_output(['git', '-C', str(cp), 'rev-parse', 'HEAD'], text=True).strip()
-    if cp_revision not in CONTROL_PLANE_V2_REVISIONS:
+    if cp_revision not in CONTROL_PLANE_SUPPORTED_V2_REVISIONS:
         raise RuntimeError(f'wrong pinned Control Plane revision: {cp_revision}')
-    for path, revision in ((executor_root, MOLTBOT_V2_REVISION), (manifest.parents[1], MANIFEST_REVISION)):
+    executor_revision = MOLTBOT_MERGED_REVISION if cp_revision == CONTROL_PLANE_MERGED_REVISION else MOLTBOT_V2_REVISION
+    for path, revision in ((executor_root, executor_revision), (manifest.parents[1], MANIFEST_REVISION)):
         actual = subprocess.check_output(['git', '-C', str(path), 'rev-parse', 'HEAD'], text=True).strip()
         if actual != revision:
             raise RuntimeError(f'wrong pinned producer revision: {actual}')
@@ -93,7 +94,7 @@ def main(output: Path):
                     assert result.status == 'reconciled' and not result.newly_executed
                 if name == 'historical_applied':
                     result = e.observe_historical(request)
-            m = export_execution_artifacts(request, result, dest, repository_revision=MOLTBOT_V2_REVISION)
+            m = export_execution_artifacts(request, result, dest, repository_revision=executor_revision)
             expected_attempts = 0 if name in {'denied', 'historical_absent'} else 1
             assert len(m['attempts']) == expected_attempts
             source = {'control_plane_record': w.records.load().model_dump(mode='json'),
@@ -144,7 +145,7 @@ def main(output: Path):
                 (output / f'producer_v2_{name}.json').write_text(bundle.model_dump_json(indent=2) + '\n')
     (output / 'producer_v2_sources.json').write_text(json.dumps(cases, indent=2) + '\n')
     (output / 'producer_v2_results.json').write_text(json.dumps({
-        'pins': {'control_plane': cp_revision, 'executor': MOLTBOT_V2_REVISION, 'manifest': MANIFEST_REVISION},
+        'pins': {'control_plane': cp_revision, 'executor': executor_revision, 'manifest': MANIFEST_REVISION},
         'scope': 'synthetic same-host SQLite; reconstruction is non-effecting; no independent verification',
         'scenarios': summaries}, indent=2) + '\n')
     print(f'{len(cases)} real-producer scenarios passed; destination and CP stores unchanged by import')
