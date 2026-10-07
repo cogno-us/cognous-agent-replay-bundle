@@ -91,6 +91,17 @@ jobs:
       - name: Install pinned Control Plane runtime dependencies
         run: pip install -e pinned/control-plane
 
+      - name: Run focused persistence compatibility qualification
+        working-directory: replay-bundle
+        env:
+          ARB_V2_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane-v2
+          ARB_V2_PERSISTENCE_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane-v2-persistence
+          ARB_V2_MOLTBOT_ROOT: ${{ github.workspace }}/pinned/moltbot-v2
+          ARB_PINNED_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane
+          ARB_PINNED_MOLTBOT_ROOT: ${{ github.workspace }}/pinned/moltbot-safe
+          ARB_PINNED_MANIFEST_FIXTURE: ${{ github.workspace }}/pinned/manifest/examples/refund_integration_v1_1.manifest.json
+        run: pytest -q tests/test_producer_v2_persistence.py
+
       - name: Run unit and pinned integration tests
         working-directory: replay-bundle
         env:
