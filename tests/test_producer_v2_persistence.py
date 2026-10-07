@@ -136,10 +136,10 @@ def test_persistence_revision_still_fails_closed_on_contract_contradictions(pers
 def test_source_asserted_provenance_is_not_promoted(persistence_cases):
     source = persistence_cases["sources"]["success"]
     bundle = import_bounded_workflow(**source)
-    profile = next(p for p in bundle.producer_profiles if p.repository == "cogno-us/moltbot-safe")
-    assert profile.provenance["mode"] == "versioned_profile"
-    assert profile.provenance["source_asserted"]
-    assert profile.provenance["independently_established"] == source["moltbot_export"]["provenance"]["independently_established"]
+    contract = bundle.metadata["moltbot_producer_contract"]
+    assert contract["provenance"]["mode"] == "versioned_profile"
+    assert contract["provenance"]["source_asserted"] == source["moltbot_export"]["provenance"]["source_asserted"]
+    assert contract["provenance"]["independently_established"] == source["moltbot_export"]["provenance"]["independently_established"]
     assert all(r.evidence_class == "producer_reported" for r in bundle.records)
 
 
