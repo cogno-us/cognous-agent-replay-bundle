@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added exact producer-v2 compatibility for Control Plane persistence repair `248d899634d9db3518e831bc7ab568a48733f825` while preserving the earlier `2ea9528e...` revision.
+- Kept Reconstruction Bundle 0.2.0 because the persistence repair does not change the consumed bounded-record wire contract.
+- Added real-producer persistence-repair qualification and fail-closed contradiction tests without promoting source-asserted provenance.
+
 - Added explicit executor producer 2.0.0 / repaired Control Plane revision compatibility without relabeling legacy evidence.
 - Preserved null and rejected observations, owning attempt records and observed-absence semantics in Reconstruction Bundle 0.2.0.
 - Added real-producer qualification, generated examples and adversarial owner-record/assurance checks.
