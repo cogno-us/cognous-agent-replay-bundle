@@ -12,7 +12,10 @@ import pytest
 
 from agent_replay_bundle import ReconstructionBundle, import_bounded_workflow
 from agent_replay_bundle.importers import (
+    BOUNDED_V2_PERSISTENCE_PROFILE,
+    BOUNDED_V2_PROFILE,
     CONTROL_PLANE_V2_PERSISTENCE_REVISION,
+    CONTROL_PLANE_V2_REVISION,
     ImportContractError,
 )
 
@@ -94,13 +97,30 @@ def test_rejected_observation_then_applied_recovery_keeps_rejection(persistence_
     source = persistence_cases["sources"]["rejected_restart"]
     bundle = import_bounded_workflow(**source)
     retained = [r.data for r in bundle.records if r.record_type == "reconciliation"]
-    assert any(not r["observation_accepted"] for r in retained)
+    source_reconciliations = source["control_plane_record"]["reconciliations"]
+    assert retained == source_reconciliations
+
+    rejected_index = next(i for i, rec in enumerate(retained) if not rec["observation_accepted"])
+    rejected = retained[rejected_index]
+    assert rejected["result"] == "hold"
+    assert rejected["reasons"]
+    assert rejected["observation"] == source_reconciliations[rejected_index]["observation"]
     assert retained[-1]["observation_accepted"] is True
     assert retained[-1]["observation"]["state"] == "applied"
-    rejected = [r for r in bundle.records if r.record_type == "rejected_executor_observation"]
-    assert rejected
+    assert retained[-1]["effect_id"] == rejected["effect_id"]
+
+    exported_rejected = source["moltbot_export"]["rejected_observations"]
+    retained_executor_rejected = [
+        r.data for r in bundle.records if r.record_type == "rejected_executor_observation"
+    ]
+    assert retained_executor_rejected == exported_rejected
+
     history = next(iter(bundle.metadata["effect_observation_history"].values()))
+    assert history["rejected_reconciliation_indices"] == [rejected_index]
     assert history["latest_supported_destination_state"] == "applied"
+    assert history["latest_accepted_observation"]["source_index"] == len(retained) - 1
+    assert history["acknowledgement_history"]
+
 
 
 def test_attempt_namespaces_remain_separate(persistence_cases):
@@ -141,6 +161,31 @@ def test_source_asserted_provenance_is_not_promoted(persistence_cases):
     assert contract["provenance"]["source_asserted"] == source["moltbot_export"]["provenance"]["source_asserted"]
     assert contract["provenance"]["independently_established"] == source["moltbot_export"]["provenance"]["independently_established"]
     assert all(r.evidence_class == "producer_reported" for r in bundle.records)
+
+
+@pytest.mark.parametrize(
+    "revision,expected_profile",
+    [
+        (CONTROL_PLANE_V2_REVISION, BOUNDED_V2_PROFILE),
+        (CONTROL_PLANE_V2_PERSISTENCE_REVISION, BOUNDED_V2_PERSISTENCE_PROFILE),
+    ],
+)
+def test_supported_v2_revision_metadata_agrees(persistence_cases, revision, expected_profile):
+    source = copy.deepcopy(persistence_cases["sources"]["success"])
+    source["control_plane_revision"] = revision
+    bundle = import_bounded_workflow(**source)
+    cp_profile = next(
+        p for p in bundle.producer_profiles if p.repository == "cogno-us/cognous-agent-control-plane"
+    )
+    contract = bundle.metadata["moltbot_producer_contract"]
+    assert bundle.metadata["control_plane_revision"] == revision
+    assert cp_profile.revision == revision
+    assert cp_profile.profile_id == expected_profile
+    assert contract["control_plane_revision"] == revision
+    assert contract["compatible_control_plane_revisions"] == [
+        CONTROL_PLANE_V2_REVISION,
+        CONTROL_PLANE_V2_PERSISTENCE_REVISION,
+    ]
 
 
 def test_persistence_revision_bundle_round_trips(persistence_cases):
