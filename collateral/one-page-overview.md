@@ -1,4 +1,4 @@
-# Agent Replay Bundle — One-Page Overview
+# Cognous Replay Bundle — One-Page Overview
 
 ## Purpose
 
