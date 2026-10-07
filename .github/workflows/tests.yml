@@ -40,6 +40,13 @@ jobs:
           ref: 2ea9528eeb87e14ff10f05de06473122b9df540f
           path: pinned/control-plane-v2
 
+      - name: Checkout accepted Control Plane persistence repair
+        uses: actions/checkout@v4
+        with:
+          repository: cogno-us/cognous-agent-control-plane
+          ref: 248d899634d9db3518e831bc7ab568a48733f825
+          path: pinned/control-plane-v2-persistence
+
       - name: Checkout accepted executor producer 2.0.0
         uses: actions/checkout@v4
         with:
@@ -72,6 +79,7 @@ jobs:
           test "$(git -C pinned/control-plane rev-parse HEAD)" = "283500652d47a692fb0b99a1172a6d5faffbd9a7"
           test "$(git -C pinned/moltbot-safe rev-parse HEAD)" = "1d308faf664c504b6e310db3c7a310153ef7b067"
           test "$(git -C pinned/control-plane-v2 rev-parse HEAD)" = "2ea9528eeb87e14ff10f05de06473122b9df540f"
+          test "$(git -C pinned/control-plane-v2-persistence rev-parse HEAD)" = "248d899634d9db3518e831bc7ab568a48733f825"
           test "$(git -C pinned/moltbot-v2 rev-parse HEAD)" = "177354e959cc78c59c1a776f018cfbfbf28c927b"
           test "$(git -C pinned/manifest rev-parse HEAD)" = "46c950bed37fe3812000895430bc0312d29e37ce"
           test "$(git -C pinned/alvorada rev-parse HEAD)" = "fb3d97938969a89e149e8ff8db2756091d1233fc"
@@ -87,6 +95,7 @@ jobs:
         working-directory: replay-bundle
         env:
           ARB_V2_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane-v2
+          ARB_V2_PERSISTENCE_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane-v2-persistence
           ARB_V2_MOLTBOT_ROOT: ${{ github.workspace }}/pinned/moltbot-v2
           ARB_PINNED_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane
           ARB_PINNED_MOLTBOT_ROOT: ${{ github.workspace }}/pinned/moltbot-safe
@@ -98,6 +107,7 @@ jobs:
         working-directory: replay-bundle
         env:
           ARB_V2_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane-v2
+          ARB_V2_PERSISTENCE_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane-v2-persistence
           ARB_V2_MOLTBOT_ROOT: ${{ github.workspace }}/pinned/moltbot-v2
           ARB_PINNED_CONTROL_PLANE_ROOT: ${{ github.workspace }}/pinned/control-plane
           ARB_PINNED_MOLTBOT_ROOT: ${{ github.workspace }}/pinned/moltbot-safe
