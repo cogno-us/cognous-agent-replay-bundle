@@ -15,267 +15,95 @@
 
 # Agent Replay Bundle
 
-**Portable replay records for AI-agent runs.**
+**Reconstruct what the retained records support.**
 
-Agent Replay Bundle is a public schema and reference validator for packaging AI-agent runs into portable evidence artifacts. A replay bundle records the task frame, action proposals, policy decisions, policy evaluation traces, blocked actions, authority records, reliance records, final output, validation report, redaction metadata, and signature metadata.
+## Overview
 
-It is designed for teams that need to reconstruct what an AI agent proposed, what policy decided, what was blocked, what authority existed, what sources were relied on, and how the run can be inspected later.
+A portable reconstruction format, importer, validator and CLI for agent-run evidence. Reconstruction Bundle 0.2.0 imports exact supported producer revisions while keeping legacy bundle formats and historical provenance distinct.
 
-This repository is intentionally narrow. It is not an agent framework, not a model runtime, not a replay viewer, not a hosted service, and not a complete enterprise governance platform. It is a reference format for replayable AI-agent run evidence.
+**Implementation status:** this README describes merged public reference work. Component acceptance, selection in the hub and execution of a qualification are separate facts. The selected revision for this component is `043830b56595cecddfa65c064afd1c0b95e64792`; the [hub lock](https://github.com/cogno-us/cognous-open-control-stack/blob/5737267d94d2b445735c95e8480a31de73a2abe8/component-lock.json) is the source of that integration choice.
 
----
+## Purpose and intended users
 
-## What it is
+Logs from authority evaluation, execution and recovery can disagree or omit important facts. Review requires a connected record of proposals, decisions, attempts, observations and source lineage, including uncertainty rather than a retrospective success story.
 
-Agent Replay Bundle defines a portable, JSON-based evidence package for completed or partially completed AI-agent runs. It provides:
+Engineers can inspect the reference contracts and examples; enterprise architecture, security and governance reviewers can examine the boundary and evidence. Evaluate this component for its named responsibility rather than as a complete governance platform.
 
-- A **JSON Schema** for the replay bundle format
-- **Pydantic models** for working with bundles in Python
-- A **semantic validator** that checks bundle consistency beyond schema compliance
-- A **redaction helper** that strips sensitive fields while preserving governance-relevant structure
-- An **export integrity signing** helper using HMAC-SHA256
-- A **CLI** (`arb`) for validation, summarization, redaction, signing, and verification
-- **Five example bundles** covering real-world agent scenarios
+## Key features
 
----
-
-## Reconstruction import 0.2.0
-
-Version 0.2.0 adds a separate, versioned reconstruction surface for actual
-producer records. It does not silently reinterpret legacy `AgentReplayBundle`
-0.1 fields.
-
-Supported profiles are pinned to:
-
-- Agent Control Plane legacy `ReplayBundle` at
-  `283500652d47a692fb0b99a1172a6d5faffbd9a7`;
-- Agent Control Plane bounded `BoundedRunRecord` at the same revision;
-- Moltbot Safe Execution Envelope `0.2.0` and SQLite destination evidence at
-  `6b0ba1185bcd390f71df947dda349415e4105f5f`;
-- Manifest v1.1 at `46c950bed37fe3812000895430bc0312d29e37ce`;
-- Alvorada Authority Context 0.1.0 at
-  `fb3d97938969a89e149e8ff8db2756091d1233fc`.
-
-```python
-from agent_replay_bundle import import_bounded_workflow
-
-bundle = import_bounded_workflow(
-    bounded_run_record,
-    proposal=runtime_proposal,
-    moltbot_export=executor_export,
-)
-```
-
-Reconstruction is non-effecting by default. Import does not rerun a model,
-reevaluate policy, renew authorization, repeat an effect, or independently
-verify delivery. `reconstruction_complete` means the declared import contract
-was represented completely; it is not an effect-completion or verification
-claim.
-
-See [the reconstruction import contract](docs/reconstruction_import.md),
-[migration notes](docs/migration_0_2.md), and the complete synthetic
-`bounded_success_reconstruction_v0_2.json` and
-`bounded_lost_ack_reconstruction_v0_2.json` examples.
-
----
-
-## Why it matters
-
-Agent teams need to reconstruct:
-
-- What was the task?
-- What actions did the agent propose?
-- What policy decisions occurred?
-- What was blocked?
-- What authority existed?
-- What sources were relied on?
-- What output was produced?
-- Was the export redacted?
-- Was the export signed?
-- Is the bundle internally consistent?
-
-This repo gives teams a portable evidence format for AI-agent run review.
-
----
-
-## What a replay bundle contains
-
-| Section | Description |
+| Capability | Implemented or specified responsibility |
 |---|---|
-| **bundle metadata** | bundle_id, run_id, status, producer, timestamps |
-| **run frame** | task, actor, environment, allowed/blocked tools, policy version |
-| **action proposals** | every action the agent proposed, with tool, type, target, payload |
-| **policy decisions** | allow/block/escalate decisions for each action |
-| **policy evaluation traces** | per-rule evaluation detail for each decision |
-| **blocked actions** | explicit records of blocked actions |
-| **authority records** | authority grants in scope for the run |
-| **reliance records** | data sources the agent relied upon |
-| **final output** | the agent's final response or result |
-| **validation report** | embedded semantic validation results |
-| **redaction metadata** | what was redacted, when, and under what policy |
-| **signature metadata** | export integrity signature |
+| **Producer imports** | Validate exact supported Control Plane and executor combinations; reject unknown revisions rather than guessing compatibility from shape. |
+| **Identity continuity** | Preserve proposal, decision and effect identity while keeping Control Plane and executor attempt namespaces separate. |
+| **Recovery history** | Retain unknown acknowledgement, rejected/null observations and evidence-only recovery lineage. |
+| **Loss and completeness** | Represent declared reconstruction coverage and missing information without claiming effect completion. |
+| **Portable review** | Validate, summarize, redact and sign exports; HMAC export integrity is separate from production key management. |
 
----
+## How it works
 
-## Quickstart
+After a bounded refund attempt, the importer consumes the actual Control Plane and executor records. It preserves whether the destination was observed applied, absent, partial or unresolved, and which source supplied each fact. An Evidence Pack or ODES exporter can then derive review material without rerunning the action or rewriting the original records.
+
+A valid signature, chain inclusion, message receipt, reasoning instruction or evidence-package digest does not authorize execution. Institutional authority must be supplied and evaluated through the appropriate trusted boundary.
+
+## Getting started
+
+From a fresh repository checkout, use Python 3.11+ and an activated virtual environment. Install only into that environment. Package installation needs network access; the commands below exercise local reference tooling. For the full selected integration, use the [hub quickstart](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/quickstart.md), whose runner supplies exact producer checkouts and test wiring.
 
 ```bash
-pip install -e ".[dev]"
-pytest
+python -m pip install -e ".[dev]"
 arb validate examples/customer_service_replay_bundle.json
 arb summarize examples/customer_service_replay_bundle.json
-arb redact examples/customer_service_replay_bundle.json --out /tmp/redacted.json --targets --final-output
-arb sign examples/customer_service_replay_bundle.json --secret "demo-secret" --out /tmp/signed.json
-arb verify /tmp/signed.json --secret "demo-secret"
+arb --help
 ```
 
----
+## Evidence and supported scope
 
-## Example bundle
+The hub selects `043830b56595cecddfa65c064afd1c0b95e64792`. Producer profile 2.0.0 supports the exact older observation-repair and newer persistence-repair Control Plane revisions documented in the [compatibility checkpoint](docs/workstreams/replay-control-plane-persistence-checkpoint.md). Legacy unversioned and profile-1.0.0 mappings remain separate. Reconstruction Bundle stays 0.2.0.
 
-```json
-{
-  "bundle_id": "bundle-cs-001",
-  "bundle_version": "0.1",
-  "run_id": "run-cs-001",
-  "status": "complete",
-  "generated_at": "2026-07-01T10:15:00Z",
-  "frame": {
-    "frame_id": "frame-cs-001",
-    "task": "Retrieve customer order history and send a follow-up email.",
-    "actor": "customer-service-agent",
-    "environment": "production",
-    "allowed_tools": ["crm_read", "email_compose"],
-    "blocked_tools": ["bulk_email_send"],
-    "policy_version": "cs-policy-v3.1",
-    "created_at": "2026-07-01T10:14:55Z"
-  },
-  "action_proposals": ["..."],
-  "policy_decisions": ["..."],
-  "blocked_actions": ["..."],
-  "final_output": "Return confirmed. Email blocked: no external_send authority."
-}
-```
+The accepted [hub persistence-generation evidence](https://github.com/cogno-us/cognous-open-control-stack/blob/5737267d94d2b445735c95e8480a31de73a2abe8/examples/control-plane-store-adoption/qualification-summary.json) records 915 Python tests in each of two repetitions, 35 matrix entries satisfying their gates and 120 separate mocked OpenShell tests. Those are aggregate hub results, not a per-component test count or a claim of production readiness. Optional behavioral layers receive static checks only. The [support ledger](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/release-status.md) separates implementation, execution and adoption.
 
-See `examples/` for complete example bundles.
+## Limitations and deployment decisions
 
----
+Reconstruction is non-effecting. It does not reevaluate policy, renew authorization, repeat an effect or independently verify delivery. Reconstruction completeness is not destination finality. A valid digest or HMAC is not institutional authority; redaction and key custody require deployment-specific controls.
 
-## CLI
+Review original artifacts and their exact source revisions before extending a claim to a new environment. New dependencies, authority sources, destinations or enforcement mechanisms need their own compatibility and qualification. A passing reference case is not a certification of an enterprise deployment.
 
-```
-arb validate path/to/replay_bundle.json
-arb summarize path/to/replay_bundle.json
-arb redact path/to/replay_bundle.json --out path/to/redacted.json [--targets] [--final-output] [--reasons] [--policy "policy-name"]
-arb sign path/to/replay_bundle.json --secret SECRET --out path/to/signed.json [--key-id KEY_ID]
-arb verify path/to/signed_replay_bundle.json --secret SECRET
-arb check-examples
-```
+## Repository guide
 
-Exit codes:
-- `0` — success or valid
-- `1` — invalid (validate/verify)
-- `2` — usage, file not found, or parse error
+Use these sources for details; their historical checkpoints retain the status and scope of the work they recorded:
+
+- [docs/reconstruction_import.md](docs/reconstruction_import.md)
+- [docs/executor_producer_migration.md](docs/executor_producer_migration.md)
+- [docs/workstreams/replay-control-plane-persistence-checkpoint.md](docs/workstreams/replay-control-plane-persistence-checkpoint.md)
+- [docs/signing.md](docs/signing.md)
+
+For a nontechnical introduction, read the [business overview](collateral/business-collateral.md) and [one-page overview](collateral/one-page-overview.md). Both describe this component's role and evidence limits, not additional runtime features.
+
+## Contributing and attribution
+
+[Contribution guidance](CONTRIBUTING.md) describes review and validation expectations. Keep evidence-linked claims, preserve historical records and separate proposed features from accepted implementation.
+
+See [LICENSE](LICENSE) and [attribution](NOTICE) for the existing terms and third-party scope. Developed by [Cognous](https://cogno.us); no licensing change is part of this documentation update.
 
 ---
 
-## Validation
+## Cognous stack components
 
-`arb validate` runs semantic validation beyond JSON schema checking. It verifies:
+[Stack hub](https://github.com/cogno-us/cognous-open-control-stack) · [Selected pins](https://github.com/cogno-us/cognous-open-control-stack/blob/main/component-lock.json) · [Evidence and limits](https://github.com/cogno-us/cognous-open-control-stack/blob/main/docs/release-status.md)
 
-- All IDs are non-empty
-- All cross-references between proposals, decisions, traces, and blocked actions are consistent
-- Fingerprints match between decisions and their traces
-- Signature metadata is complete if `signed=true`
-- Redaction metadata is complete if `redacted=true`
+Component links are navigation, not a requirement to install every component. The hub lock determines its supported integration.
 
-Warnings are informational and do not affect the `valid` status.
-
-See [docs/validation.md](docs/validation.md) for the full rule set.
-
----
-
-## Redaction
-
-```python
-from agent_replay_bundle.redaction import redact_replay_bundle
-
-redacted = redact_replay_bundle(
-    bundle,
-    redact_payloads=True,
-    redact_targets=True,
-    redact_final_output=True,
-    redaction_policy="public-review",
-)
-```
-
-Redaction:
-- Returns a deep copy; does not mutate the original
-- Preserves all IDs, timestamps, decision results, policy names, fingerprints, and cross-references
-- Records redacted field paths in `redaction_metadata.redacted_fields`
-
-See [docs/redaction.md](docs/redaction.md).
-
----
-
-## Signing
-
-```python
-from agent_replay_bundle.signing import sign_replay_bundle, verify_signed_replay_bundle
-
-signed = sign_replay_bundle(bundle, secret="my-secret", key_id="key-001")
-is_valid = verify_signed_replay_bundle(signed, secret="my-secret")
-```
-
-Signing uses HMAC-SHA256 with a caller-supplied secret. This is export integrity — not production key management. See [docs/signing.md](docs/signing.md) for details and limitations.
-
-For signed exports, `SignedReplayBundle.signature_metadata` is the authoritative signature metadata. `AgentReplayBundle.signature_metadata` is optional embedded metadata for systems that store signature state directly on the bundle.
-
----
-
-## Relationship to Agent Control Plane
-
-Agent Control Plane records and governs agent action proposals at runtime.
-Agent Replay Bundle defines a portable evidence format for packaging those run records for audit, review, redaction, signing, validation, and replay.
-
-Agent Control Plane can emit replay bundles, but this format can also be used by other systems.
-
----
-
-## JSON schemas
-
-Schemas are in `schemas/`. Legacy schema: `schemas/agent_replay_bundle.schema.json`. Reconstruction 0.2 schema: `schemas/reconstruction_bundle_0_2.schema.json`.
-
-All schemas use JSON Schema Draft 2020-12.
-
----
-
-## Examples
-
-| File | Scenario |
+| Component | Responsibility |
 |---|---|
-| `customer_service_replay_bundle.json` | CRM read allowed, email blocked |
-| `internal_research_replay_bundle.json` | Document search and export escalation |
-| `procurement_replay_bundle.json` | Vendor comparison, PO blocked for approval |
-| `redacted_replay_bundle.json` | Customer service bundle with payloads and output redacted |
-| `signed_replay_bundle.json` | Structurally valid signed bundle with demo signature |
-
----
-
-## Security / scope
-
-See [SECURITY.md](SECURITY.md).
-
-This is a schema, validator, redaction helper, and signing helper. It is not a security boundary. It does not enforce runtime access control. HMAC signing is export integrity, not production key management. Redaction must be configured correctly.
-
----
-
-## Roadmap
-
-See [docs/roadmap.md](docs/roadmap.md).
-
----
-
-## License
-
-Apache-2.0. See LICENSE and NOTICE.
+| [Agent Action Manifest](https://github.com/cogno-us/cognous-agent-action-manifest) | Declare the action before evaluating permission |
+| [Agent Control Plane](https://github.com/cogno-us/cognous-agent-control-plane) | Evaluate proposals against authority and preserve the decision record |
+| [Agent Governance Evidence Pack](https://github.com/cogno-us/cognous-agent-governance-evidence-pack) | Turn traceable runtime records into reviewable governance evidence |
+| [Open Decision Evidence Standard](https://github.com/cogno-us/open-decision-evidence-standard) | Portable decision evidence across system and organizational boundaries |
+| [Alvorada Experimental Workbench](https://github.com/cogno-us/alvorada) | Governed exchange and continuity for a bounded synthetic workflow |
+| [Moltbot Safe](https://github.com/cogno-us/moltbot-safe) | Constrained execution beneath independent current authorization |
+| [BitRep](https://github.com/cogno-us/bitrep) | Verify issuer signatures under explicit trust assumptions |
+| [The Index](https://github.com/cogno-us/the-index) | A local blockchain reference for claims, evidence commitments and lifecycle history |
+| [Portable Reasoning Protocol v1.0](https://github.com/cogno-us/portable-reasoning-protocol) | Portable instructions for evidence-bounded reasoning |
+| [Research Intelligence Protocol v1.0](https://github.com/cogno-us/research-intelligence-protocol) | Disciplined discovery and cross-domain abstraction, kept separate |
+| [TFA Protocol (S43)](https://github.com/cogno-us/truth-freedom-agency-protocol) | Truth · Freedom · Agency |
+| [Constitutional Governance for Institutions](https://github.com/cogno-us/constitutional-governance-for-institutions) | Alvorada: authority, challenge and correction for institutions |
