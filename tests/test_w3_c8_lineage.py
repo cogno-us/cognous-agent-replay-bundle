@@ -3,7 +3,7 @@ import json
 from agent_replay_bundle.w3_c8_lineage import import_c8_source,C8LineageError
 def data():
     return {"generation":"c8-source-rows/0.1","claim_id":"c","rows":{
-    "execution_claims_v1":[{"claim_id":"c","tenant_id":"t","grant_id":"g","grant_revision":"1","claim_json":json.dumps({"claim_id":"c","tenant_id":"t","grant_id":"g","grant_revision":"1","proposal_commitment":"digest","approval_state":[{"approval_ref":"a"}],"policy_state":[{"ref":"p","version":"1"}]})}],
+    "execution_claims_v1":[{"claim_id":"c","tenant_id":"t","grant_id":"g","grant_revision":"1","claim_json":json.dumps({"claim_id":"c","tenant_id":"t","grant_id":"g","grant_revision":"1","operation_commitment":"digest-op","approval_state":[{"approval_ref":"a"}],"policy_state":[{"ref":"p","version":"1"}]})}],
     "authority_grants_v1":[{"grant_id":"g","tenant_id":"t","revision":"1"}],
     "authority_approvals_v1":[{"approval_ref":"a","grant_id":"g","tenant_id":"t","proposal_commitment":"digest"}],
     "authority_policies_v1":[{"ref":"p","tenant_id":"t","version":"1"}]}}
