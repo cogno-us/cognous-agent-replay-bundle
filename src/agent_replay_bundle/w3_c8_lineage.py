@@ -41,8 +41,8 @@ def import_c8_source(*, authority:dict,stop:dict|None=None) -> ReconstructionBun
             raise C8LineageError("retained claim JSON identity contradiction")
         if raw.get("grant_id")!=grant or str(raw.get("grant_revision"))!=str(claims[0].get("grant_revision")):
             raise C8LineageError("grant revision contradiction")
-        if raw.get("proposal_commitment") is None:
-            raise C8LineageError("retained proposal commitment absent")
+        if not raw.get("operation_commitment"):
+            raise C8LineageError("retained operation commitment absent")
         grant_rows=rows.get("authority_grants_v1",[])
         if grant_rows and str(grant_rows[0].get("revision"))!=str(claims[0].get("grant_revision")):
             raise C8LineageError("authoritative grant revision mismatch")
@@ -50,9 +50,11 @@ def import_c8_source(*, authority:dict,stop:dict|None=None) -> ReconstructionBun
         available_approvals={x.get("approval_ref") for x in rows.get("authority_approvals_v1",[])}
         if not expected_approvals.issubset(available_approvals):
             raise C8LineageError("required approval row unavailable")
-        for approval in rows.get("authority_approvals_v1",[]):
-            if approval.get("proposal_commitment")!=raw["proposal_commitment"]:
-                raise C8LineageError("approval proposal commitment mismatch")
+        proposal_commitments={a.get("proposal_commitment") for a in rows.get("authority_approvals_v1",[])}
+        if any(not isinstance(x,str) or not x for x in proposal_commitments):
+            raise C8LineageError("retained approval proposal commitment absent")
+        if len(proposal_commitments)>1:
+            raise C8LineageError("conflicting approval proposal commitments")
         expected_policies={(x.get("ref"),str(x.get("version"))) for x in raw.get("policy_state",[])}
         actual_policies={(x.get("ref"),str(x.get("version"))) for x in rows.get("authority_policies_v1",[])}
         if not expected_policies.issubset(actual_policies):
