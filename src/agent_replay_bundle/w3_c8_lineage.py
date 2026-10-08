@@ -31,6 +31,32 @@ def import_c8_source(*, authority:dict,stop:dict|None=None) -> ReconstructionBun
                 raise C8LineageError("tenant mismatch in "+name)
             if name in ("authority_grants_v1","authority_approvals_v1") and x.get("grant_id")!=grant:
                 raise C8LineageError("grant mismatch in "+name)
+    if claims:
+        try:
+            import json
+            raw=json.loads(claims[0]["claim_json"])
+        except (KeyError,TypeError,ValueError):
+            raise C8LineageError("retained claim JSON unavailable or corrupt")
+        if raw.get("claim_id")!=authority["claim_id"] or raw.get("tenant_id")!=tenant:
+            raise C8LineageError("retained claim JSON identity contradiction")
+        if raw.get("grant_id")!=grant or str(raw.get("grant_revision"))!=str(claims[0].get("grant_revision")):
+            raise C8LineageError("grant revision contradiction")
+        if raw.get("proposal_commitment") is None:
+            raise C8LineageError("retained proposal commitment absent")
+        grant_rows=rows.get("authority_grants_v1",[])
+        if grant_rows and str(grant_rows[0].get("revision"))!=str(claims[0].get("grant_revision")):
+            raise C8LineageError("authoritative grant revision mismatch")
+        expected_approvals={x.get("approval_ref") for x in raw.get("approval_state",[])}
+        available_approvals={x.get("approval_ref") for x in rows.get("authority_approvals_v1",[])}
+        if not expected_approvals.issubset(available_approvals):
+            raise C8LineageError("required approval row unavailable")
+        for approval in rows.get("authority_approvals_v1",[]):
+            if approval.get("proposal_commitment")!=raw["proposal_commitment"]:
+                raise C8LineageError("approval proposal commitment mismatch")
+        expected_policies={(x.get("ref"),str(x.get("version"))) for x in raw.get("policy_state",[])}
+        actual_policies={(x.get("ref"),str(x.get("version"))) for x in rows.get("authority_policies_v1",[])}
+        if not expected_policies.issubset(actual_policies):
+            raise C8LineageError("required policy revision unavailable")
     events=[]
     if stop is not None:
         if stop.get("generation")!="c8-local-stop/0.1":
