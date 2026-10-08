@@ -1,6 +1,6 @@
 import copy
 import pytest
-from test_w3_c8_lineage import data
+from tests.test_w3_c8_lineage import data
 from agent_replay_bundle.w3_c8_lineage import import_c8_source,C8LineageError
 
 @pytest.mark.parametrize("table,key,value",[
