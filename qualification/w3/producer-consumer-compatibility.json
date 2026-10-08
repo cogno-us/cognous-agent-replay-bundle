@@ -1,0 +1,107 @@
+{
+  "matrix_version": "w3-producer-consumer-compatibility/1.0",
+  "prepared_against": {
+    "hub": "6ad8f6a409d3140aa65af19d5c850dd8e58f8a7d",
+    "replay_main": "d758db92e5d7b1109a001d92077036d80cc87a19",
+    "evidence_main": "97316b9170e4bef8310612a2f5823795a097c81d",
+    "selected_runtime_profile": "merged-producers-v1"
+  },
+  "selected_historical_consumer_pair": {
+    "replay_revision": "459e4ba62fca49364aebb0050cd5fb2dd5a71bfa",
+    "reconstruction_bundle_version": "0.2.0",
+    "evidence_revision": "b4baccd823d2a73be276c1de745b19cf7c56a0d6",
+    "evidence_pack_schema_version": "0.2.0",
+    "evidence_transformation_version": "agep-manifest-reconstruction-import/0.3.2"
+  },
+  "supported_pairs": [
+    {
+      "generation": "historical-unversioned",
+      "control_plane_revision": "283500652d47a692fb0b99a1172a6d5faffbd9a7",
+      "executor_revision": "6b0ba1185bcd390f71df947dda349415e4105f5f",
+      "executor_profile_version": null,
+      "replay_bundle_version": "0.2.0",
+      "status": "historical",
+      "assurance_note": "revision-pinned decoding only; no tenant/profile backfill"
+    },
+    {
+      "generation": "executor-producer-1.0.0",
+      "control_plane_revision": "283500652d47a692fb0b99a1172a6d5faffbd9a7",
+      "executor_revision": "1d308faf664c504b6e310db3c7a310153ef7b067",
+      "executor_profile_version": "1.0.0",
+      "replay_bundle_version": "0.2.0",
+      "status": "historical",
+      "assurance_note": "source-asserted provenance retained; no independent provenance promotion"
+    },
+    {
+      "generation": "executor-producer-2.0.0-observation-repair",
+      "control_plane_revision": "2ea9528eeb87e14ff10f05de06473122b9df540f",
+      "executor_revision": "177354e959cc78c59c1a776f018cfbfbf28c927b",
+      "executor_profile_version": "2.0.0",
+      "replay_bundle_version": "0.2.0",
+      "status": "historical-supported",
+      "assurance_note": "exact pair only"
+    },
+    {
+      "generation": "executor-producer-2.0.0-persistence-repair",
+      "control_plane_revision": "248d899634d9db3518e831bc7ab568a48733f825",
+      "executor_revision": "177354e959cc78c59c1a776f018cfbfbf28c927b",
+      "executor_profile_version": "2.0.0",
+      "replay_bundle_version": "0.2.0",
+      "status": "historical-supported",
+      "assurance_note": "same consumed wire contract; exact pair only"
+    },
+    {
+      "generation": "merged-producers-v1",
+      "manifest_revision": "46c950bed37fe3812000895430bc0312d29e37ce",
+      "control_plane_revision": "d3dadee70bd319812b207389ab1e0f6efe511916",
+      "executor_revision": "c3c3ee7188b9367cf70b08074b9c40a5c70c94ac",
+      "executor_profile_version": "2.0.0",
+      "replay_revision": "459e4ba62fca49364aebb0050cd5fb2dd5a71bfa",
+      "replay_bundle_version": "0.2.0",
+      "evidence_revision": "b4baccd823d2a73be276c1de745b19cf7c56a0d6",
+      "evidence_pack_schema_version": "0.2.0",
+      "evidence_transformation_version": "agep-manifest-reconstruction-import/0.3.2",
+      "status": "selected",
+      "assurance_note": "bounded synthetic qualified pair; replay/evidence are non-authorizing"
+    }
+  ],
+  "prepared_not_supported": [
+    {
+      "semantic": "tenant",
+      "source": "W0 fixture runtime-action-proposal/1.2",
+      "reason": "contract fixture is not accepted W1 producer output bytes"
+    },
+    {
+      "semantic": "refusal",
+      "source": "C4/W2 planned producer lineage",
+      "reason": "no accepted W2 producer bytes inspected"
+    },
+    {
+      "semantic": "stop",
+      "source": "W0 C7 expectation",
+      "reason": "contract expectation is not accepted W2 producer output bytes"
+    },
+    {
+      "semantic": "effect_observation",
+      "source": "existing bounded producer generations",
+      "reason": "already supported only at the exact historical pairs above; future generation awaits accepted producer bytes"
+    },
+    {
+      "semantic": "recovery",
+      "source": "existing bounded producer generations",
+      "reason": "already supported only at the exact historical pairs above; future generation awaits accepted producer bytes"
+    },
+    {
+      "semantic": "optional_adapter_provenance",
+      "source": "draft/unmerged adapter work",
+      "reason": "unaccepted adapter PRs cannot establish a consumer generation"
+    }
+  ],
+  "evidence_states": {
+    "missing": "expected evidence field or dependency is absent",
+    "incomplete": "some reconstructable evidence exists but required lineage/completeness is not established",
+    "unsupported": "producer revision/profile/version is outside an accepted exact compatibility pair",
+    "unknown": "producer recorded an explicit unknown or unresolved state; it is not absence and not success"
+  },
+  "authority_boundary": "Replay and Evidence artifacts reconstruct and summarize prior evidence; they never grant, refresh, or authorize execution."
+}
